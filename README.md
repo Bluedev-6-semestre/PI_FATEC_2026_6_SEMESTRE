@@ -1,4 +1,4 @@
-# 📌 PI_FATEC_2025_4_SEMESTRE
+# 📌 PI_FATEC_2026_6_SEMESTRE
 ## BlueDev – Sistema de Lembretes e Ocorrências
 
 ---
