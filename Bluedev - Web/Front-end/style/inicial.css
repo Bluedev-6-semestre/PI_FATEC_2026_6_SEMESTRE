@@ -1,0 +1,137 @@
+/* ============================
+   ESTILO BASE GERAL
+============================ */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+body {
+    background: #fff;
+    color: #000;
+}
+
+.navbar {
+    width: 100%;
+    height: 60px;
+    background: #fff;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 0 20px;
+    position: relative;
+}
+
+.logout-icon {
+    position: relative;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+}
+
+.logout-icon img {
+    width: 28px;
+    height: 28px;
+    transition: transform 0.2s ease;
+}
+
+.logout-icon:hover img {
+    transform: scale(1.1);
+}
+
+.logout-icon::after {
+    content: "Sair";
+    position: absolute;
+    top: 40px;
+    right: 0;
+    background: #291aadff;
+    color: #fff;
+    padding: 5px 8px;
+    font-size: 12px;
+    border-radius: 5px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    white-space: nowrap;
+}
+
+.logout-icon:hover::after {
+    opacity: 1;
+}
+
+.container {
+    display: flex;
+    height: calc(100vh - 60px);
+}
+
+.sidebar {
+    width: 220px;
+    background: #fff;
+    border-right: 1px solid #eee;
+    padding: 20px 10px;
+    color: #000;
+}
+
+.sidebar ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.sidebar li {
+    margin: 20px 0;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.sidebar a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: #000;
+    padding: 8px 10px;
+    border-radius: 4px;
+    transition: background-color 0.2s, transform 0.2s;
+}
+
+.sidebar a img {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+.sidebar a:hover {
+    background-color: #f2f2f2;
+    color: #000;
+    transform: translateX(5px);
+}
+
+.sidebar a:visited {
+    color: #000;
+}
+
+.main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.main-content h1 {
+    font-size: 28px;
+    margin-bottom: 30px;
+    font-weight: bold;
+}
+
+.logo {
+    max-width: 300px;
+    height: auto;
+}
+

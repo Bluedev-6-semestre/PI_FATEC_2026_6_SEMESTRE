@@ -1,0 +1,932 @@
+/* ============================
+   ESTILO BASE GERAL
+============================ */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+body {
+    background: #d3d3d3;
+    color: #000;
+}
+
+/* ============================
+   NAVBAR
+============================ */
+.navbar {
+    width: 100%;
+    height: 60px;
+    background: #fff;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    position: relative;
+}
+
+.logo-cliente {
+    width: 130px;
+    height: auto;
+    object-fit: contain;
+}
+
+/* ===== Ícone Logout ===== */
+.logout-icon {
+    position: relative;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+}
+
+.logout-icon img {
+    width: 28px;
+    height: 28px;
+    transition: transform 0.2s ease;
+}
+
+.logout-icon:hover img {
+    transform: scale(1.1);
+}
+
+.logout-icon::after {
+    content: "Sair";
+    position: absolute;
+    top: 40px;
+    right: 0;
+    background: #291aad;
+    color: #fff;
+    padding: 5px 8px;
+    font-size: 12px;
+    border-radius: 5px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    white-space: nowrap;
+}
+
+.logout-icon:hover::after {
+    opacity: 1;
+}
+
+/* ===== Botão Voltar ===== */
+.voltar-icon {
+    position: absolute;
+    top: 70px;
+    right: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.voltar-icon img {
+    width: 24px;
+    height: 24px;
+}
+
+.voltar-icon:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+/* ============================
+   LAYOUT GERAL
+============================ */
+.container {
+    display: flex;
+    height: calc(100vh - 60px);
+}
+
+.sidebar {
+    width: 220px;
+    background: #fff;
+    border-right: 1px solid #eee;
+    padding: 20px 10px;
+    color: #000;
+}
+
+.sidebar ul {
+    list-style: none;
+}
+
+.sidebar li {
+    margin: 20px 0;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.sidebar a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: #000;
+    padding: 8px 10px;
+    border-radius: 4px;
+    transition: background-color 0.2s, transform 0.2s;
+}
+
+.sidebar a img {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+.sidebar a:hover {
+    background-color: #f2f2f2;
+    transform: translateX(5px);
+}
+
+.main-content {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+/* ============================
+   TÍTULOS E BOTÕES DE AÇÃO
+============================ */
+.titulo-pagina {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.titulo-pagina h2 {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.botoes button {
+    padding: 8px 18px;
+    margin-left: 10px;
+    background-color: #291aad;
+    color: #fff;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+
+.botoes button:hover {
+    background-color: #1f1288;
+}
+
+/* ===== Botão Remover ===== */
+.btn-remover {
+    background-color: #d90000 !important;
+    border: 1px solid #b00000;
+    border-radius: 20px;
+    padding: 8px 18px;
+    color: #fff !important;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn-remover:hover {
+    background-color: #a00000 !important;
+}
+
+
+/* ============================
+   LISTAS (Ocorrência / Fornecedor)
+============================ */
+.lista-ocorrencias,
+.lista-fornecedores {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Cards */
+.ocorrencia-card,
+.fornecedor-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 15px;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    background-color: #fafafa;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.ocorrencia-card:hover,
+.fornecedor-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.info h3 {
+    font-size: 18px;
+    margin-bottom: 5px;
+}
+
+.info p {
+    font-size: 14px;
+    color: #555;
+}
+
+.descricao {
+    font-size: 13px;
+    color: #555;
+    margin-top: 5px;
+}
+
+.acoes {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.acoes img {
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.acoes img:hover {
+    transform: scale(1.1);
+}
+
+/* ===== Checkbox de Remoção ===== */
+.checkbox-ocorrencia,
+.checkbox-fornecedor {
+    display: none;
+    margin-right: 10px;
+    transform: scale(1.2);
+    accent-color: #d90000;
+}
+
+.remocao-ativa .checkbox-ocorrencia,
+.remocao-ativa .checkbox-fornecedor {
+    display: inline-block;
+}
+
+/* ============================
+   MENSAGENS "SEM RESULTADO"
+============================ */
+.sem-ocorrencias,
+.sem-fornecedores {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.sem-ocorrencias p,
+.sem-fornecedores p {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 100px;
+}
+
+.sem-ocorrencias img,
+.sem-fornecedores img {
+    width: 350px !important;
+    height: auto !important;
+    margin-top: -60px !important;
+}
+
+/* ============================
+   FORMULÁRIOS (Ocorrência / Fornecedor)
+============================ */
+.form-ocorrencia,
+.form-fornecedor {
+    background-color: #f5f5f5;
+    padding: 30px;
+    border-radius: 20px;
+    max-width: 600px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    position: relative;
+}
+
+.form-ocorrencia label,
+.form-fornecedor label {
+    font-weight: bold;
+    color: #333;
+}
+
+.form-ocorrencia input,
+.form-fornecedor input,
+.form-ocorrencia select,
+.form-fornecedor select,
+.form-ocorrencia textarea,
+.form-fornecedor textarea {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    width: 100%;
+}
+
+.form-ocorrencia button,
+.form-fornecedor button {
+    align-self: flex-start;
+    background-color: #1f1288;
+    border: 1px solid black;
+    border-radius: 20px;
+    padding: 8px 18px;
+    cursor: pointer;
+    color: #fff;
+    transition: 0.3s;
+}
+
+.form-ocorrencia button:hover,
+.form-fornecedor button:hover {
+    background-color: #1b0f77;
+}
+
+/* ============================
+   MODAL (Visualização / Edição)
+============================ */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.modal-content {
+    background: #fff;
+    width: 500px;
+    max-width: 90%;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    position: relative;
+    animation: abrir 0.3s ease;
+}
+
+.modal-content h2 {
+    margin-bottom: 10px;
+}
+
+.modal-content p {
+    margin: 5px 0;
+}
+
+.modal-imagem-wrapper {
+    text-align: center;
+    margin: 15px 0;
+}
+
+.modal-imagem-wrapper img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+}
+
+.fechar {
+    position: absolute;
+    right: 15px;
+    top: 10px;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+}
+
+.botoes-modal {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.btn-editar, .btn-fechar {
+    background: #d90000;
+    color: #fff;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn-fechar {
+    background: #888;
+}
+
+.btn-editar:hover { background: #b00000; }
+.btn-fechar:hover { background: #666; }
+
+@keyframes abrir {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+/* ============================
+   ESTILO BASE GERAL
+============================ */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+body {
+    background: #d3d3d3;
+    color: #000;
+}
+
+/* ============================
+   NAVBAR
+============================ */
+.navbar {
+    width: 100%;
+    height: 60px;
+    background: #fff;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    position: relative;
+}
+
+.logo-cliente {
+    width: 130px;
+    height: auto;
+    object-fit: contain;
+}
+
+/* ===== Ícone Logout ===== */
+.logout-icon {
+    position: relative;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+}
+
+.logout-icon img {
+    width: 28px;
+    height: 28px;
+    transition: transform 0.2s ease;
+}
+
+.logout-icon:hover img {
+    transform: scale(1.1);
+}
+
+.logout-icon::after {
+    content: "Sair";
+    position: absolute;
+    top: 40px;
+    right: 0;
+    background: #291aad;
+    color: #fff;
+    padding: 5px 8px;
+    font-size: 12px;
+    border-radius: 5px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    white-space: nowrap;
+}
+
+.logout-icon:hover::after {
+    opacity: 1;
+}
+
+/* ============================
+   LAYOUT GERAL
+============================ */
+.container {
+    display: flex;
+    height: calc(100vh - 60px);
+}
+
+.sidebar {
+    width: 220px;
+    background: #fff;
+    border-right: 1px solid #eee;
+    padding: 20px 10px;
+    color: #000;
+}
+
+.sidebar ul {
+    list-style: none;
+}
+
+.sidebar li {
+    margin: 20px 0;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.sidebar a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: #000;
+    padding: 8px 10px;
+    border-radius: 4px;
+    transition: background-color 0.2s, transform 0.2s;
+}
+
+.sidebar a img {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+.sidebar a:hover {
+    background-color: #f2f2f2;
+    transform: translateX(5px);
+}
+
+.main-content {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+/* ============================
+   TÍTULOS E BOTÕES DE AÇÃO
+============================ */
+.titulo-pagina {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.titulo-pagina h2 {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.botoes button {
+    padding: 8px 18px;
+    margin-left: 10px;
+    background-color: #291aad;
+    color: #fff;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+
+.botoes button:hover {
+    background-color: #1f1288;
+}
+
+.btn-remover {
+    background-color: #d90000 !important;
+    border: 1px solid #b00000;
+    border-radius: 20px;
+    padding: 8px 18px;
+    color: #fff !important;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn-remover:hover {
+    background-color: #a00000 !important;
+}
+
+/* ============================
+   LISTA DE FUNCIONÁRIOS
+============================ */
+.lista-funcionarios {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.funcionario-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 15px;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    background-color: #fafafa;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.funcionario-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.info h3 {
+    font-size: 18px;
+    margin-bottom: 5px;
+}
+
+.info p {
+    font-size: 14px;
+    color: #555;
+}
+
+.acoes {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.acoes img {
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.acoes img:hover {
+    transform: scale(1.1);
+}
+
+.checkbox-funcionario {
+    display: none;
+    margin-right: 10px;
+    transform: scale(1.2);
+    accent-color: #d90000;
+}
+
+.remocao-ativa .checkbox-funcionario {
+    display: inline-block;
+}
+
+/* ============================
+   MENSAGEM "SEM FUNCIONÁRIOS"
+============================ */
+.sem-funcionarios {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.sem-funcionarios p {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 100px;
+}
+
+.sem-funcionarios img {
+    width: 500px !important;
+    height: auto !important;
+    margin-top: -155px !important;
+}
+
+/* ============================
+   FORMULÁRIO FUNCIONÁRIOS
+============================ */
+.container-form {
+    background-color: #f5f5f5;
+    padding: 30px;
+    border-radius: 20px;
+    max-width: 600px;
+    margin: 40px auto;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.container-form label {
+    font-weight: bold;
+    color: #333;
+}
+
+.container-form input {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    width: 100%;
+}
+
+.container-form button {
+    align-self: flex-start;
+    background-color: #1f1288;
+    border: 1px solid black;
+    border-radius: 20px;
+    padding: 8px 18px;
+    cursor: pointer;
+    color: #fff;
+    transition: 0.3s;
+}
+
+.container-form button:hover {
+    background-color: #1b0f77;
+}
+
+/* ============================
+   MODAL FUNCIONÁRIO
+============================ */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.modal-content {
+    background: #fff;
+    width: 500px;
+    max-width: 90%;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    position: relative;
+    animation: abrir 0.3s ease;
+}
+
+.modal-content h2 {
+    margin-bottom: 10px;
+}
+
+.modal-content p {
+    margin: 5px 0;
+}
+
+.fechar {
+    position: absolute;
+    right: 15px;
+    top: 10px;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+}
+
+.botoes-modal {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.btn-editar, .btn-fechar {
+    background: #d90000;
+    color: #fff;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn-fechar {
+    background: #888;
+}
+
+.checkbox-funcionario {
+    display: none;
+}
+
+body.modo-remover .checkbox-funcionario {
+    display: inline-block;
+}
+.form-funcionario {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 400px;
+    margin: auto;
+    padding: 20px;
+    background: #fff;
+    border-radius: 10px;
+}
+
+.form-funcionario input {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+
+.form-funcionario button {
+    background: #1f1288;
+    color: #fff;
+    border: none;
+    padding: 10px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.form-funcionario button:hover {
+    background: #1f1288;
+}
+.checkbox-funcionario {
+  display: none;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  margin-right: 10px;
+  accent-color: #ff0000;
+}
+
+.modo-remover .checkbox-funcionario {
+  display: inline-block !important;
+}
+
+.btn-editar:hover { background: #b00000; }
+.btn-fechar:hover { background: #666; }
+
+@keyframes abrir {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+/* ===========================
+   AJUSTE DO ÍCONE E ÁREA DO FILTRO
+=========================== */
+
+.filtro-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.icone-filtro {
+    width: 24px;          
+    height: 24px;
+    cursor: pointer;
+    margin-left: 10px;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+    opacity: 0.85;
+}
+
+.icone-filtro:hover {
+    transform: scale(1.1);
+    opacity: 1;
+}
+
+/* ============================
+   ESTILO DO FILTRO DE OCORRÊNCIAS
+============================ */
+.filtro-container {
+    position: relative;
+    display: inline-block;
+}
+
+.icone-filtro {
+    width: 22px;
+    height: 22px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    vertical-align: middle;
+}
+
+.icone-filtro:hover {
+    transform: scale(1.1);
+}
+
+.menu-filtro {
+    display: none;
+    position: absolute;
+    top: 30px;
+    left: 0;
+    background: #fff;
+    border: 1px solid #ccc;
+    padding: 8px;
+    border-radius: 6px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    z-index: 10;
+}
+
+.menu-filtro.ativo {
+    display: block;
+}
+
+.menu-filtro select {
+    padding: 5px;
+    font-size: 14px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    cursor: pointer;
+}
+
+

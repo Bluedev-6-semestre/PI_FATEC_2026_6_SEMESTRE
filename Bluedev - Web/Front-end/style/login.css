@@ -1,0 +1,226 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #f0f2f5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.container {
+    display: flex;
+    width: 1000px;
+    height: 480px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.illustration-panel {
+    flex: 1;
+    background-color: #e8e8e8;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px;
+}
+
+.illustration-panel img {
+    max-width: 60%;
+    height: auto;
+    margin: 10px 0;
+    object-fit: contain;
+}
+
+.illustration-panel img:first-child { 
+    max-width: 40%; 
+}
+
+.illustration-panel img:last-child { 
+    max-width: 70%; 
+}
+
+.login-panel {
+    flex: 1;
+    background-color: #e8e8e8;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.login-form {
+    background-color: #ffffff;
+    padding: 40px;
+    border-radius: 10px;
+    width: 350px;
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.login-form h2 {
+    font-size: 2.5em;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 30px;
+}
+
+.input-group {
+    margin-bottom: 20px;
+}
+
+.input-group label {
+    display: flex;
+    align-items: center;
+    background-color: #f7f7f7;
+    border-radius: 5px;
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+}
+
+.input-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+}
+
+.input-group input {
+    flex-grow: 1;
+    border: none;
+    outline: none;
+    background-color: transparent;
+    font-size: 1em;
+    color: #555;
+    padding: 5px 0;
+}
+
+.input-group input::placeholder {
+    color: #aaa;
+}
+
+
+.help-link {
+    text-align: right;
+    font-size: 0.9em;
+    color: #666;
+    margin-top: -10px;
+    margin-bottom: 25px;
+}
+
+.login-button {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 5px;
+    background-color: #1e3a8a;
+    color: #ffffff;
+    font-size: 1.1em;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.login-button:hover {
+    background-color: #1c3275;
+}
+
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+        width: 100%;
+        height: auto;
+        border-radius: 0;
+    }
+
+    .illustration-panel {
+        display: none;
+    }
+
+    .login-panel {
+        width: 100%;
+        height: 100vh;
+    }
+
+    .login-form {
+        width: 90%;
+        padding: 20px;
+    }
+}
+/* ============================
+   POP-UP DE AJUDA (MODAL)
+============================ */
+.modal {
+    display: none; /* escondido por padrão */
+    position: fixed;
+    z-index: 999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.6); /* fundo escurecido */
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: #fff;
+    padding: 25px 35px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    max-width: 320px;
+    animation: fadeIn 0.3s ease;
+}
+
+.modal-content h3 {
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.modal-content p {
+    font-size: 15px;
+    color: #555;
+}
+
+.close-btn {
+    margin-top: 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.close-btn:hover {
+    background-color: #0056b3;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.help-link {
+    color: #007bff;
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: 14px;
+    margin-top: 10px;
+    display: inline-block;
+    transition: color 0.2s ease;
+}
+
+.help-link:hover {
+    color: #0056b3;
+}
+
