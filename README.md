@@ -79,38 +79,40 @@ git clone https://github.com/seu-usuario/BlueDev.git
 
 **Mobile:**
 1. Certifique-se de ter o [Flutter](https://docs.flutter.dev/get-started/install) instalado.
-2. Acesse a pasta do projeto mobile:
-```bash
-cd BlueDev/mobile
+2. Configure o PHP e o MySQL e publique `Bluedev - Web/Front-end` em um servidor acessível pelo dispositivo. A API fica na pasta `api/`.
+3. No PowerShell aberto na raiz do repositório, entre na pasta do projeto mobile e confirme que o manifesto existe:
+```powershell
+Set-Location ".\Bluedev - Mobile"
+Test-Path .\pubspec.yaml
 ```
-3. Instale as dependências:
+4. Gere os projetos nativos Android/iOS:
+```bash
+flutter create --platforms=android,ios .
+```
+5. Instale as dependências e execute:
 ```bash
 flutter pub get
-```
-4. Execute o projeto:
-```bash
 flutter run
 ```
+6. Na tela de login, informe a URL completa da API, terminando em `/api`. Use HTTPS em dispositivos reais; no emulador Android, `10.0.2.2` aponta para o computador hospedeiro.
+7. Para compilar uma versão Android de produção, confirme que `android/app/src/main/AndroidManifest.xml` declara a permissão `INTERNET`. Em desenvolvimento local com HTTP, habilite tráfego sem TLS no Android; prefira HTTPS fora do ambiente de desenvolvimento.
 
 ---
 
 ### 📂 **Estrutura de Arquivos**
 
 ```
-BlueDev/
-├─ web/
-│  ├─ style/ocorrencia.css
-│  ├─ Imagens/
-│  ├─ ocorrencias.php
-│  ├─ adicionar_ocorrencia.php
-│  ├─ remover_ocorrencia.php
-│  └─ bd.php
-├─ mobile/
+PI_FATEC_2026_6_SEMESTRE/
+├─ Bluedev - Web/
+│  └─ Front-end/
+│     ├─ api/                 # API JSON para o aplicativo mobile
+│     ├─ bd.php
+│     └─ ocorrencias.php
+├─ Bluedev - Mobile/
 │  ├─ lib/
-│  ├─ android/
-│  ├─ ios/
-│  ├─ pubspec.yaml
-│  └─ (demais arquivos padrão do Flutter)
+│  │  ├─ api_client.dart
+│  │  └─ main.dart
+│  └─ pubspec.yaml
 └─ README.md
 ```
 
@@ -121,4 +123,4 @@ BlueDev/
 Em desenvolvimento
 
 - **Web:** implementação de cadastro, edição, remoção e modal de visualização de ocorrências (melhoramento contínuo).
-- **Mobile:** desenvolvimento inicial da versão mobile do sistema com Flutter.
+- **Mobile:** aplicativo Flutter integrado à API PHP para login e gestão de ocorrências.

@@ -33,20 +33,6 @@ try {
         }
     }
 
-    $pdo->exec("CREATE TABLE IF NOT EXISTS ocorrencias (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    usuario_id INT NOT NULL,
-    maquina_id INT NOT NULL,
-    titulo VARCHAR(100) NOT NULL,
-    tipo VARCHAR(50) NOT NULL,
-    status VARCHAR(50) NOT NULL,
-    descricao TEXT,
-    imagem VARCHAR(255) NULL,
-    data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
-    FOREIGN KEY (maquina_id) REFERENCES maquinas(id)
-)");
-
     $pdo->exec("CREATE TABLE IF NOT EXISTS fornecedores (
         id INT AUTO_INCREMENT PRIMARY KEY,
         usuario_id INT NOT NULL,
@@ -83,6 +69,28 @@ try {
     data_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE ON UPDATE CASCADE
 )");
+
+     $pdo->exec("CREATE TABLE IF NOT EXISTS ocorrencias (
+         id INT AUTO_INCREMENT PRIMARY KEY,
+         usuario_id INT NOT NULL,
+         maquina_id INT NULL,
+         titulo VARCHAR(100) NOT NULL,
+         tipo VARCHAR(50) NOT NULL,
+         status VARCHAR(50) NOT NULL,
+         descricao TEXT,
+         imagem VARCHAR(255) NULL,
+         data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+         FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
+         FOREIGN KEY (maquina_id) REFERENCES maquinas(id)
+     )");
+     $stmt = $pdo->prepare(
+         "SELECT IS_NULLABLE FROM information_schema.COLUMNS
+          WHERE TABLE_SCHEMA = :dbname AND TABLE_NAME = 'ocorrencias' AND COLUMN_NAME = 'maquina_id'"
+     );
+     $stmt->execute(['dbname' => $dbname]);
+     if ($stmt->fetchColumn() === 'NO') {
+         $pdo->exec("ALTER TABLE ocorrencias MODIFY maquina_id INT NULL");
+     }
 
 
 } catch (PDOException $e) {
