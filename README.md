@@ -97,6 +97,40 @@ flutter run
 6. Na tela de login, informe a URL completa da API, terminando em `/api`. Use HTTPS em dispositivos reais; no emulador Android, `10.0.2.2` aponta para o computador hospedeiro.
 7. Para compilar uma versão Android de produção, confirme que `android/app/src/main/AndroidManifest.xml` declara a permissão `INTERNET`. Em desenvolvimento local com HTTP, habilite tráfego sem TLS no Android; prefira HTTPS fora do ambiente de desenvolvimento.
 
+#### Configuração da API no aplicativo
+
+O aplicativo não se conecta diretamente ao MySQL: ele envia requisições HTTP para os arquivos PHP da API. Publique a pasta `Bluedev - Web/Front-end` em um servidor com PHP e configure o acesso ao MySQL em `Bluedev - Web/Front-end/bd.php`. O servidor precisa conseguir acessar o banco de dados.
+
+Na tela inicial do aplicativo, preencha **Endereço da API** com o endereço-base da pasta `api`, sem acrescentar o nome de um arquivo PHP. Por exemplo, se a pasta `Front-end` estiver publicada na raiz do servidor:
+
+```text
+https://meu-dominio.com/api
+```
+
+Se estiver publicada em um subdiretório, inclua esse caminho:
+
+```text
+https://meu-dominio.com/Front-end/api
+```
+
+O aplicativo acrescenta os endpoints necessários a esse endereço, como `login.php`, `logout.php`, `ocorrencias.php` e `maquinas.php`. Portanto, não inclua esses nomes na URL informada. A URL pode terminar ou não com `/`.
+
+Para testar no emulador Android com o servidor PHP rodando no computador, execute na raiz do repositório:
+
+```powershell
+php -S 0.0.0.0:8000 -t ".\Bluedev - Web\Front-end"
+```
+
+Informe no aplicativo `http://10.0.2.2:8000/api` — no emulador Android, `10.0.2.2` aponta para o computador hospedeiro. No app Windows, use `http://localhost:8000/api`. Em um celular físico, use o endereço IP local do computador, por exemplo `http://192.168.1.10:8000/api`, e permita a conexão na rede/firewall. O PHP e o MySQL também devem estar em execução.
+
+Opcionalmente, defina um endereço inicial ao iniciar o app:
+
+```powershell
+flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8000/api
+```
+
+Esse valor apenas preenche o campo de endereço; ele continua editável na tela de login. Em Android, requisições locais por HTTP podem exigir habilitar tráfego sem TLS na configuração nativa de desenvolvimento. Para servidores acessíveis pela internet, use HTTPS.
+
 ---
 
 ### 📂 **Estrutura de Arquivos**
