@@ -42,7 +42,10 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _url = TextEditingController(
-    text: const String.fromEnvironment('API_BASE_URL'),
+    text: const String.fromEnvironment(
+      'API_BASE_URL',
+      defaultValue: 'http://10.0.2.2:8000/api',
+    ),
   );
   final _usuario = TextEditingController();
   final _senha = TextEditingController();

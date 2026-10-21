@@ -121,15 +121,15 @@ Para testar no emulador Android com o servidor PHP rodando no computador, execut
 php -S 0.0.0.0:8000 -t ".\Bluedev - Web\Front-end"
 ```
 
-Informe no aplicativo `http://10.0.2.2:8000/api` — no emulador Android, `10.0.2.2` aponta para o computador hospedeiro. No app Windows, use `http://localhost:8000/api`. Em um celular físico, use o endereço IP local do computador, por exemplo `http://192.168.1.10:8000/api`, e permita a conexão na rede/firewall. O PHP e o MySQL também devem estar em execução.
+No emulador Android, o endereço inicial é `http://10.0.2.2:8000/api`; `10.0.2.2` aponta para o computador hospedeiro. No app Windows, use `http://localhost:8000/api`. Em um celular físico, configure o IP local do computador, por exemplo `http://192.168.1.10:8000/api`, e permita a conexão na rede/firewall. O PHP e o MySQL também devem estar em execução.
 
-Opcionalmente, defina um endereço inicial ao iniciar o app:
+No emulador Android, o app já abre com `http://10.0.2.2:8000/api` preenchido. Para usar outro endereço sem digitá-lo, defina `API_BASE_URL` ao iniciar o app:
 
 ```powershell
-flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8000/api
+flutter run --dart-define=API_BASE_URL=https://meu-dominio.com/api
 ```
 
-Esse valor apenas preenche o campo de endereço; ele continua editável na tela de login. Em Android, requisições locais por HTTP podem exigir habilitar tráfego sem TLS na configuração nativa de desenvolvimento. Para servidores acessíveis pela internet, use HTTPS.
+O endereço é apenas a localização do servidor, não uma chave de API. O campo continua editável na tela de login. Em celular físico, configure o IP do computador na rede local ou o domínio do servidor; `10.0.2.2` funciona apenas no emulador Android. O acesso continua protegido pelo login individual de cada usuário, sem uma chave compartilhada no app. Em Android, requisições locais por HTTP podem exigir habilitar tráfego sem TLS na configuração nativa de desenvolvimento. Para servidores acessíveis pela internet, use HTTPS.
 
 ---
 
