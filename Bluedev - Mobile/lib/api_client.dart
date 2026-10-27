@@ -107,13 +107,40 @@ class ApiClient {
   Future<void> saveOcorrencia(
     Map<String, dynamic> values, {
     int? id,
+    List<int>? imageBytes,
   }) async {
     await _request(
       id == null ? 'POST' : 'PUT',
       'ocorrencias.php',
       query: id == null ? null : {'id': '$id'},
-      body: values,
+      body: {
+        ...values,
+        if (imageBytes != null) 'imagem_base64': base64Encode(imageBytes),
+      },
     );
+  }
+
+  /// Marca a ocorrência como concluída (ação "Validar" do administrador).
+  Future<void> validarOcorrencia(Map<String, dynamic> item) async {
+    await saveOcorrencia(
+      {
+        'titulo': item['titulo'],
+        'tipo': item['tipo'],
+        'status': 'Concluída',
+        'descricao': item['descricao'] ?? '',
+        'maquina_id': item['maquina_id'],
+      },
+      id: int.parse('${item['id']}'),
+    );
+  }
+
+  /// Endereço público de uma imagem salva em uploads/ (a API fica em .../api).
+  String? imageUrl(String? path) {
+    if (path == null || path.isEmpty) return null;
+    final root = baseUrl.trim().replaceFirst(RegExp(r'/+$'), '');
+    final site = root.replaceFirst(RegExp(r'/api$'), '');
+    final relative = path.startsWith('uploads/') ? path : 'uploads/$path';
+    return '$site/$relative';
   }
 
   Future<void> deleteOcorrencia(int id) async {

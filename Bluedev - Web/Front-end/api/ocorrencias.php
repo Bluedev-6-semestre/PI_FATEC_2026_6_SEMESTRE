@@ -36,13 +36,15 @@ if ($method === 'GET') {
 }
 
 if ($method === 'POST' || $method === 'PUT') {
-    $data = api_validate_occurrence(api_read_json(), $usuario);
+    $body = api_read_json();
+    $data = api_validate_occurrence($body, $usuario);
     api_verify_machine($pdo, $data['maquina_id'], $usuario);
 
     if ($method === 'POST') {
+        $imagem = api_save_image($body);
         $stmt = $pdo->prepare(
-            'INSERT INTO ocorrencias (usuario_id, maquina_id, titulo, tipo, status, descricao) '
-            . 'VALUES (:usuario_id, :maquina_id, :titulo, :tipo, :status, :descricao)'
+            'INSERT INTO ocorrencias (usuario_id, maquina_id, titulo, tipo, status, descricao, imagem) '
+            . 'VALUES (:usuario_id, :maquina_id, :titulo, :tipo, :status, :descricao, :imagem)'
         );
         $stmt->execute([
             ':usuario_id' => $usuario['id'],
@@ -50,7 +52,8 @@ if ($method === 'POST' || $method === 'PUT') {
             ':titulo' => $data['titulo'],
             ':tipo' => $data['tipo'],
             ':status' => $data['status'],
-            ':descricao' => $data['descricao']
+            ':descricao' => $data['descricao'],
+            ':imagem' => $imagem
         ]);
         api_respond(['id' => (int) $pdo->lastInsertId()], 201);
     }
@@ -72,9 +75,15 @@ if ($method === 'POST' || $method === 'PUT') {
         $where .= ' AND usuario_id = :usuario_id';
         $params[':usuario_id'] = $usuario['id'];
     }
+    $setImagem = '';
+    $imagem = api_save_image($body);
+    if ($imagem !== null) {
+        $setImagem = ', imagem = :imagem';
+        $params[':imagem'] = $imagem;
+    }
     $stmt = $pdo->prepare(
         'UPDATE ocorrencias SET maquina_id = :maquina_id, titulo = :titulo, tipo = :tipo, '
-        . 'status = :status, descricao = :descricao WHERE ' . $where
+        . 'status = :status, descricao = :descricao' . $setImagem . ' WHERE ' . $where
     );
     $stmt->execute($params);
     if ($stmt->rowCount() === 0) {
