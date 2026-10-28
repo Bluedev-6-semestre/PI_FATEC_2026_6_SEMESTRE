@@ -22,22 +22,29 @@ class MoreScreen extends StatelessWidget {
           _MenuItem(
             icon: Icons.local_shipping_outlined,
             label: 'Fornecedores',
-            onTap: () => showSoon(context, 'Fornecedores'),
+            onTap: () => _openPlaceholder(context, 'Fornecedores'),
           ),
           _MenuItem(
             icon: Icons.group_outlined,
             label: 'Funcionários',
-            onTap: () => showSoon(context, 'Funcionários'),
+            onTap: () => _openPlaceholder(context, 'Funcionários'),
           ),
           _MenuItem(
             icon: Icons.settings_suggest_outlined,
             label: 'Máquinas',
-            onTap: () => showSoon(context, 'Máquinas'),
+            onTap: () => _openPlaceholder(context, 'Máquinas'),
+          ),
+          _MenuItem(
+            icon: Icons.bar_chart_rounded,
+            label: 'Relatórios',
+            onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
+              builder: (_) => const ReportsPlaceholder(),
+            )),
           ),
           _MenuItem(
             icon: Icons.credit_card_rounded,
             label: 'Assinatura',
-            onTap: () => showSoon(context, 'Assinatura'),
+            onTap: () => _openPlaceholder(context, 'Assinatura'),
           ),
           _MenuItem(
             icon: Icons.logout_rounded,
@@ -46,6 +53,28 @@ class MoreScreen extends StatelessWidget {
             onTap: () => logout(context, session),
           ),
         ],
+      ),
+    );
+  }
+}
+
+void _openPlaceholder(BuildContext context, String title) {
+  Navigator.of(context).push(MaterialPageRoute<void>(
+    builder: (_) => _FeaturePlaceholderScreen(title: title),
+  ));
+}
+
+class _FeaturePlaceholderScreen extends StatelessWidget {
+  const _FeaturePlaceholderScreen({required this.title});
+
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(title)),
+      body: Center(
+        child: Text('Tela em preparação.', style: BD.body),
       ),
     );
   }
