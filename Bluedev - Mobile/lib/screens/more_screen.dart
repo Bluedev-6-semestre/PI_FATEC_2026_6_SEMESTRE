@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../main.dart';
 import '../theme.dart';
 import '../widgets.dart';
+import 'employees_screen.dart';
 import 'machines_screen.dart';
 
 /// Aba "Mais" do ADM (M06): cadastros, assinatura e sair.
@@ -28,7 +29,9 @@ class MoreScreen extends StatelessWidget {
           _MenuItem(
             icon: Icons.group_outlined,
             label: 'Funcionários',
-            onTap: () => _openPlaceholder(context, 'Funcionários'),
+            onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
+              builder: (_) => EmployeesScreen(session: session),
+            )),
           ),
           _MenuItem(
             icon: Icons.settings_suggest_outlined,
