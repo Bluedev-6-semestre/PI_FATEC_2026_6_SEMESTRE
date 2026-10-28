@@ -7,6 +7,7 @@ import 'home_screen.dart';
 import 'more_screen.dart';
 import 'occurrence_form_screen.dart';
 import 'occurrences_screen.dart';
+import 'reports_screen.dart';
 
 /// Estrutura principal: abas Início, Ocorrências, Relatórios e Mais/Perfil,
 /// com o botão central (+) que sempre abre Nova ocorrência (M10).
@@ -43,7 +44,7 @@ class _MainShellState extends State<MainShell> {
         onReports: () => setState(() => _tab = 2),
       ),
       OccurrencesScreen(session: _session, onNew: _newOccurrence),
-      const ReportsPlaceholder(),
+      ReportsScreen(session: _session),
       _session.isAdmin
           ? MoreScreen(session: _session)
           : ProfileScreen(session: _session),

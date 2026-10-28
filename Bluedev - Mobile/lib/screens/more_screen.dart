@@ -5,6 +5,7 @@ import '../theme.dart';
 import '../widgets.dart';
 import 'employees_screen.dart';
 import 'machines_screen.dart';
+import 'reports_screen.dart';
 import 'suppliers_screen.dart';
 
 /// Aba "Mais" do ADM (M06): cadastros, assinatura e sair.
@@ -47,7 +48,7 @@ class MoreScreen extends StatelessWidget {
             icon: Icons.bar_chart_rounded,
             label: 'Relatórios',
             onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
-              builder: (_) => const ReportsPlaceholder(),
+              builder: (_) => ReportsScreen(session: session),
             )),
           ),
           _MenuItem(
@@ -135,46 +136,6 @@ class ProfileScreen extends StatelessWidget {
             onTap: () => logout(context, session),
           ),
         ],
-      ),
-    );
-  }
-}
-
-/// Aba Relatórios (M19/M20): ainda não faz parte desta entrega.
-class ReportsPlaceholder extends StatelessWidget {
-  const ReportsPlaceholder({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Relatórios')),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: BD.iconBg,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: const Icon(Icons.bar_chart_rounded,
-                    color: BD.primary, size: 28),
-              ),
-              const SizedBox(height: 14),
-              Text('Relatórios em breve', style: BD.cardTitle),
-              const SizedBox(height: 4),
-              Text(
-                'Os gráficos por tipo, status e mês ainda não foram implementados no app.',
-                textAlign: TextAlign.center,
-                style: BD.caption,
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

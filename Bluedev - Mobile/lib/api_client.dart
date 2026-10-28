@@ -180,6 +180,27 @@ class ApiClient {
     await _request('DELETE', 'fornecedores.php', query: {'id': '$id'});
   }
 
+  Future<Map<String, dynamic>> getRelatorios({
+    required DateTime inicio,
+    required DateTime fim,
+    String? busca,
+  }) async {
+    String dateValue(DateTime value) =>
+        '${value.year}-${value.month.toString().padLeft(2, '0')}-'
+        '${value.day.toString().padLeft(2, '0')}';
+
+    final result = await _request(
+      'GET',
+      'relatorios.php',
+      query: {
+        'inicio': dateValue(inicio),
+        'fim': dateValue(fim),
+        if (busca != null && busca.trim().isNotEmpty) 'busca': busca.trim(),
+      },
+    );
+    return result as Map<String, dynamic>;
+  }
+
   Future<void> saveOcorrencia(
     Map<String, dynamic> values, {
     int? id,
