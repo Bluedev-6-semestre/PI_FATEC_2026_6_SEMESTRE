@@ -150,6 +150,36 @@ class ApiClient {
     await _request('DELETE', 'funcionarios.php', query: {'id': '$id'});
   }
 
+  Future<List<Map<String, dynamic>>> getFornecedores() async {
+    final result = await _request('GET', 'fornecedores.php');
+    return (result as List<dynamic>).cast<Map<String, dynamic>>();
+  }
+
+  Future<Map<String, dynamic>> consultarCnpj(String cnpj) async {
+    final result = await _request(
+      'GET',
+      'fornecedores.php',
+      query: {'consultar_cnpj': cnpj},
+    );
+    return result as Map<String, dynamic>;
+  }
+
+  Future<void> saveFornecedor(
+    Map<String, dynamic> values, {
+    int? id,
+  }) async {
+    await _request(
+      id == null ? 'POST' : 'PUT',
+      'fornecedores.php',
+      query: id == null ? null : {'id': '$id'},
+      body: values,
+    );
+  }
+
+  Future<void> deleteFornecedor(int id) async {
+    await _request('DELETE', 'fornecedores.php', query: {'id': '$id'});
+  }
+
   Future<void> saveOcorrencia(
     Map<String, dynamic> values, {
     int? id,

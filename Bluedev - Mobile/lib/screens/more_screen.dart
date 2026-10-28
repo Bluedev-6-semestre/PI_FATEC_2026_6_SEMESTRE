@@ -5,6 +5,7 @@ import '../theme.dart';
 import '../widgets.dart';
 import 'employees_screen.dart';
 import 'machines_screen.dart';
+import 'suppliers_screen.dart';
 
 /// Aba "Mais" do ADM (M06): cadastros, assinatura e sair.
 class MoreScreen extends StatelessWidget {
@@ -24,7 +25,9 @@ class MoreScreen extends StatelessWidget {
           _MenuItem(
             icon: Icons.local_shipping_outlined,
             label: 'Fornecedores',
-            onTap: () => _openPlaceholder(context, 'Fornecedores'),
+            onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
+              builder: (_) => SuppliersScreen(session: session),
+            )),
           ),
           _MenuItem(
             icon: Icons.group_outlined,
