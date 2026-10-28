@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../main.dart';
 import '../theme.dart';
 import '../widgets.dart';
+import 'machines_screen.dart';
 
 /// Aba "Mais" do ADM (M06): cadastros, assinatura e sair.
 class MoreScreen extends StatelessWidget {
@@ -32,7 +33,9 @@ class MoreScreen extends StatelessWidget {
           _MenuItem(
             icon: Icons.settings_suggest_outlined,
             label: 'Máquinas',
-            onTap: () => _openPlaceholder(context, 'Máquinas'),
+            onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
+              builder: (_) => MachinesScreen(session: session),
+            )),
           ),
           _MenuItem(
             icon: Icons.bar_chart_rounded,

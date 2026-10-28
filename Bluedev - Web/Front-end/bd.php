@@ -58,17 +58,38 @@ try {
     usuario_id INT NOT NULL,
     nome VARCHAR(100) NOT NULL,
     codigo VARCHAR(50) NOT NULL,
-    modelo VARCHAR(100) NOT NULL,
-    fabricante VARCHAR(100) NOT NULL,
-    numero_serie VARCHAR(100) NOT NULL,
-    data_aquisicao DATE NOT NULL,
-    localizacao VARCHAR(150) NOT NULL,
+    modelo VARCHAR(100) NULL,
+    fabricante VARCHAR(100) NULL,
+    numero_serie VARCHAR(100) NULL,
+    data_aquisicao DATE NULL,
+    localizacao VARCHAR(150) NULL,
     status_maquina VARCHAR(50) NOT NULL,
     descricao TEXT,
     data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     data_atualizacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE ON UPDATE CASCADE
 )");
+
+    $stmt = $pdo->prepare(
+        "SELECT COLUMN_NAME, IS_NULLABLE FROM information_schema.COLUMNS
+         WHERE TABLE_SCHEMA = :dbname AND TABLE_NAME = 'maquinas'
+         AND COLUMN_NAME IN ('modelo', 'fabricante', 'numero_serie', 'data_aquisicao', 'localizacao')"
+    );
+    $stmt->execute(['dbname' => $dbname]);
+    $nullableMachineFields = [
+        'modelo' => 'VARCHAR(100)',
+        'fabricante' => 'VARCHAR(100)',
+        'numero_serie' => 'VARCHAR(100)',
+        'data_aquisicao' => 'DATE',
+        'localizacao' => 'VARCHAR(150)'
+    ];
+    foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $column) {
+        $name = $column['COLUMN_NAME'];
+        if ($column['IS_NULLABLE'] === 'NO' && isset($nullableMachineFields[$name])) {
+            $pdo->exec('ALTER TABLE maquinas MODIFY ' . $name . ' '
+                . $nullableMachineFields[$name] . ' NULL');
+        }
+    }
 
      $pdo->exec("CREATE TABLE IF NOT EXISTS ocorrencias (
          id INT AUTO_INCREMENT PRIMARY KEY,

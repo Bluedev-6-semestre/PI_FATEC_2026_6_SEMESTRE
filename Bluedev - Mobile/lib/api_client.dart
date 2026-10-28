@@ -104,6 +104,31 @@ class ApiClient {
     return (result as List<dynamic>).cast<Map<String, dynamic>>();
   }
 
+  Future<List<Map<String, dynamic>>> getMaquinasDetalhadas() async {
+    final result = await _request(
+      'GET',
+      'maquinas.php',
+      query: {'detalhes': '1'},
+    );
+    return (result as List<dynamic>).cast<Map<String, dynamic>>();
+  }
+
+  Future<void> saveMaquina(
+    Map<String, dynamic> values, {
+    int? id,
+  }) async {
+    await _request(
+      id == null ? 'POST' : 'PUT',
+      'maquinas.php',
+      query: id == null ? null : {'id': '$id'},
+      body: values,
+    );
+  }
+
+  Future<void> deleteMaquina(int id) async {
+    await _request('DELETE', 'maquinas.php', query: {'id': '$id'});
+  }
+
   Future<void> saveOcorrencia(
     Map<String, dynamic> values, {
     int? id,
