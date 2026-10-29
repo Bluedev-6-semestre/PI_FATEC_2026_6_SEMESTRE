@@ -104,16 +104,154 @@ class ApiClient {
     return (result as List<dynamic>).cast<Map<String, dynamic>>();
   }
 
-  Future<void> saveOcorrencia(
+  Future<List<Map<String, dynamic>>> getMaquinasDetalhadas() async {
+    final result = await _request(
+      'GET',
+      'maquinas.php',
+      query: {'detalhes': '1'},
+    );
+    return (result as List<dynamic>).cast<Map<String, dynamic>>();
+  }
+
+  Future<void> saveMaquina(
     Map<String, dynamic> values, {
     int? id,
   }) async {
     await _request(
       id == null ? 'POST' : 'PUT',
-      'ocorrencias.php',
+      'maquinas.php',
       query: id == null ? null : {'id': '$id'},
       body: values,
     );
+  }
+
+  Future<void> deleteMaquina(int id) async {
+    await _request('DELETE', 'maquinas.php', query: {'id': '$id'});
+  }
+
+  Future<List<Map<String, dynamic>>> getFuncionarios() async {
+    final result = await _request('GET', 'funcionarios.php');
+    return (result as List<dynamic>).cast<Map<String, dynamic>>();
+  }
+
+  Future<void> saveFuncionario(
+    Map<String, dynamic> values, {
+    int? id,
+  }) async {
+    await _request(
+      id == null ? 'POST' : 'PUT',
+      'funcionarios.php',
+      query: id == null ? null : {'id': '$id'},
+      body: values,
+    );
+  }
+
+  Future<void> deleteFuncionario(int id) async {
+    await _request('DELETE', 'funcionarios.php', query: {'id': '$id'});
+  }
+
+  Future<List<Map<String, dynamic>>> getFornecedores() async {
+    final result = await _request('GET', 'fornecedores.php');
+    return (result as List<dynamic>).cast<Map<String, dynamic>>();
+  }
+
+  Future<Map<String, dynamic>> consultarCnpj(String cnpj) async {
+    final result = await _request(
+      'GET',
+      'fornecedores.php',
+      query: {'consultar_cnpj': cnpj},
+    );
+    return result as Map<String, dynamic>;
+  }
+
+  Future<void> saveFornecedor(
+    Map<String, dynamic> values, {
+    int? id,
+  }) async {
+    await _request(
+      id == null ? 'POST' : 'PUT',
+      'fornecedores.php',
+      query: id == null ? null : {'id': '$id'},
+      body: values,
+    );
+  }
+
+  Future<void> deleteFornecedor(int id) async {
+    await _request('DELETE', 'fornecedores.php', query: {'id': '$id'});
+  }
+
+  Future<Map<String, dynamic>> getRelatorios({
+    required DateTime inicio,
+    required DateTime fim,
+    String? busca,
+  }) async {
+    String dateValue(DateTime value) =>
+        '${value.year}-${value.month.toString().padLeft(2, '0')}-'
+        '${value.day.toString().padLeft(2, '0')}';
+
+    final result = await _request(
+      'GET',
+      'relatorios.php',
+      query: {
+        'inicio': dateValue(inicio),
+        'fim': dateValue(fim),
+        if (busca != null && busca.trim().isNotEmpty) 'busca': busca.trim(),
+      },
+    );
+    return result as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> getAssinatura() async {
+    final result = await _request('GET', 'assinatura.php');
+    return result as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> criarAssinatura() async {
+    final result = await _request(
+      'POST',
+      'assinatura.php',
+      body: const {},
+    );
+    return result as Map<String, dynamic>;
+  }
+
+  Future<void> saveOcorrencia(
+    Map<String, dynamic> values, {
+    int? id,
+    List<int>? imageBytes,
+  }) async {
+    await _request(
+      id == null ? 'POST' : 'PUT',
+      'ocorrencias.php',
+      query: id == null ? null : {'id': '$id'},
+      body: {
+        ...values,
+        if (imageBytes != null) 'imagem_base64': base64Encode(imageBytes),
+      },
+    );
+  }
+
+  /// Marca a ocorrência como concluída (ação "Validar" do administrador).
+  Future<void> validarOcorrencia(Map<String, dynamic> item) async {
+    await saveOcorrencia(
+      {
+        'titulo': item['titulo'],
+        'tipo': item['tipo'],
+        'status': 'Concluída',
+        'descricao': item['descricao'] ?? '',
+        'maquina_id': item['maquina_id'],
+      },
+      id: int.parse('${item['id']}'),
+    );
+  }
+
+  /// Endereço público de uma imagem salva em uploads/ (a API fica em .../api).
+  String? imageUrl(String? path) {
+    if (path == null || path.isEmpty) return null;
+    final root = baseUrl.trim().replaceFirst(RegExp(r'/+$'), '');
+    final site = root.replaceFirst(RegExp(r'/api$'), '');
+    final relative = path.startsWith('uploads/') ? path : 'uploads/$path';
+    return '$site/$relative';
   }
 
   Future<void> deleteOcorrencia(int id) async {
