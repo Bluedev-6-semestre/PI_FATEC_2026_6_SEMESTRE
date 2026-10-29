@@ -167,7 +167,17 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
   Widget build(BuildContext context) {
     final employees = _visibleEmployees;
     return Scaffold(
-      appBar: AppBar(title: const Text('Funcionários')),
+      appBar: AppBar(
+        title: const Text('Funcionários'),
+        actions: [
+          IconButton(
+            tooltip: 'Adicionar funcionário',
+            onPressed: () => _openForm(),
+            icon: const Icon(Icons.add_rounded),
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
@@ -181,12 +191,6 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
                   40,
                 ),
                 children: [
-                  FilledButton.icon(
-                    onPressed: () => _openForm(),
-                    icon: const Icon(Icons.add_rounded),
-                    label: const Text('Adicionar funcionário'),
-                  ),
-                  const SizedBox(height: 12),
                   TextField(
                     controller: _search,
                     style: BD.body,

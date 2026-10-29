@@ -205,7 +205,17 @@ class _MachinesScreenState extends State<MachinesScreen> {
   Widget build(BuildContext context) {
     final machines = _visibleMachines;
     return Scaffold(
-      appBar: AppBar(title: const Text('Máquinas')),
+      appBar: AppBar(
+        title: const Text('Máquinas'),
+        actions: [
+          IconButton(
+            tooltip: 'Adicionar máquina',
+            onPressed: () => _openForm(),
+            icon: const Icon(Icons.add_rounded),
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
@@ -215,12 +225,6 @@ class _MachinesScreenState extends State<MachinesScreen> {
                 padding:
                     const EdgeInsets.fromLTRB(BD.margin, 14, BD.margin, 40),
                 children: [
-                  FilledButton.icon(
-                    onPressed: () => _openForm(),
-                    icon: const Icon(Icons.add_rounded),
-                    label: const Text('Adicionar máquina'),
-                  ),
-                  const SizedBox(height: 12),
                   TextField(
                     controller: _search,
                     style: BD.body,

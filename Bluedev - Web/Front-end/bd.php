@@ -128,6 +128,15 @@ try {
 
 
 } catch (PDOException $e) {
+    error_log($e->getMessage());
+    if (isset($_SERVER['SCRIPT_NAME']) &&
+        strpos($_SERVER['SCRIPT_NAME'], '/api/') !== false &&
+        function_exists('api_respond')) {
+        api_respond(
+            ['erro' => 'Não foi possível conectar ao banco de dados. Verifique se o MySQL está em execução.'],
+            500
+        );
+    }
     die("Erro ao conectar ou criar banco/tabelas no MySQL: " . $e->getMessage());
 }
 ?>

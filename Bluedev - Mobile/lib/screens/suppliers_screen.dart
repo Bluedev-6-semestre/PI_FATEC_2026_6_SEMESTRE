@@ -172,7 +172,17 @@ class _SuppliersScreenState extends State<SuppliersScreen> {
   Widget build(BuildContext context) {
     final suppliers = _visibleSuppliers;
     return Scaffold(
-      appBar: AppBar(title: const Text('Fornecedores')),
+      appBar: AppBar(
+        title: const Text('Fornecedores'),
+        actions: [
+          IconButton(
+            tooltip: 'Adicionar fornecedor',
+            onPressed: () => _openForm(),
+            icon: const Icon(Icons.add_rounded),
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
@@ -186,12 +196,6 @@ class _SuppliersScreenState extends State<SuppliersScreen> {
                   40,
                 ),
                 children: [
-                  FilledButton.icon(
-                    onPressed: () => _openForm(),
-                    icon: const Icon(Icons.add_rounded),
-                    label: const Text('Adicionar fornecedor'),
-                  ),
-                  const SizedBox(height: 12),
                   TextField(
                     controller: _search,
                     style: BD.body,
