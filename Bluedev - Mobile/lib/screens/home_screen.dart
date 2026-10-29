@@ -3,8 +3,11 @@ import 'package:flutter/material.dart';
 import '../main.dart';
 import '../theme.dart';
 import '../widgets.dart';
+import 'employees_screen.dart';
+import 'machines_screen.dart';
 import 'occurrence_detail_screen.dart';
 import 'subscription_screen.dart';
+import 'suppliers_screen.dart';
 
 /// M02 · Início ADM (pagamento validado)
 /// M03 · Início ADM (teste grátis)
@@ -171,19 +174,31 @@ class _HomeScreenState extends State<HomeScreen> {
                   _Shortcut(
                     icon: Icons.local_shipping_outlined,
                     label: 'Fornec.',
-                    onTap: () => showSoon(context, 'Fornecedores'),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => SuppliersScreen(session: _session),
+                      ),
+                    ),
                   ),
                   const SizedBox(width: 8),
                   _Shortcut(
                     icon: Icons.group_outlined,
                     label: 'Funcion.',
-                    onTap: () => showSoon(context, 'Funcionários'),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => EmployeesScreen(session: _session),
+                      ),
+                    ),
                   ),
                   const SizedBox(width: 8),
                   _Shortcut(
                     icon: Icons.settings_suggest_outlined,
                     label: 'Máquinas',
-                    onTap: () => showSoon(context, 'Máquinas'),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => MachinesScreen(session: _session),
+                      ),
+                    ),
                   ),
                   const SizedBox(width: 8),
                   _Shortcut(
