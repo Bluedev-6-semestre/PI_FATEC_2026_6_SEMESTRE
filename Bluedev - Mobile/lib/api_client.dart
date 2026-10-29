@@ -201,6 +201,20 @@ class ApiClient {
     return result as Map<String, dynamic>;
   }
 
+  Future<Map<String, dynamic>> getAssinatura() async {
+    final result = await _request('GET', 'assinatura.php');
+    return result as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> criarAssinatura() async {
+    final result = await _request(
+      'POST',
+      'assinatura.php',
+      body: const {},
+    );
+    return result as Map<String, dynamic>;
+  }
+
   Future<void> saveOcorrencia(
     Map<String, dynamic> values, {
     int? id,

@@ -6,6 +6,7 @@ import '../widgets.dart';
 import 'employees_screen.dart';
 import 'machines_screen.dart';
 import 'reports_screen.dart';
+import 'subscription_screen.dart';
 import 'suppliers_screen.dart';
 
 /// Aba "Mais" do ADM (M06): cadastros, assinatura e sair.
@@ -54,7 +55,9 @@ class MoreScreen extends StatelessWidget {
           _MenuItem(
             icon: Icons.credit_card_rounded,
             label: 'Assinatura',
-            onTap: () => _openPlaceholder(context, 'Assinatura'),
+            onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
+              builder: (_) => SubscriptionScreen(session: session),
+            )),
           ),
           _MenuItem(
             icon: Icons.logout_rounded,
@@ -63,28 +66,6 @@ class MoreScreen extends StatelessWidget {
             onTap: () => logout(context, session),
           ),
         ],
-      ),
-    );
-  }
-}
-
-void _openPlaceholder(BuildContext context, String title) {
-  Navigator.of(context).push(MaterialPageRoute<void>(
-    builder: (_) => _FeaturePlaceholderScreen(title: title),
-  ));
-}
-
-class _FeaturePlaceholderScreen extends StatelessWidget {
-  const _FeaturePlaceholderScreen({required this.title});
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(title)),
-      body: Center(
-        child: Text('Tela em preparação.', style: BD.body),
       ),
     );
   }

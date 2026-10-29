@@ -4,6 +4,7 @@ import '../main.dart';
 import '../theme.dart';
 import '../widgets.dart';
 import 'occurrence_detail_screen.dart';
+import 'subscription_screen.dart';
 
 /// M02 · Início ADM (pagamento validado)
 /// M03 · Início ADM (teste grátis)
@@ -74,7 +75,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _openDetail(Map<String, dynamic> item) async {
     final changed = await Navigator.of(context).push<bool>(MaterialPageRoute(
-      builder: (_) => OccurrenceDetailScreen(session: _session, occurrence: item),
+      builder: (_) =>
+          OccurrenceDetailScreen(session: _session, occurrence: item),
     ));
     if (changed == true) _session.changed();
   }
@@ -122,7 +124,12 @@ class _HomeScreenState extends State<HomeScreen> {
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8)),
                         ),
-                        onPressed: () => showSoon(context, 'Assinatura'),
+                        onPressed: () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) =>
+                                SubscriptionScreen(session: _session),
+                          ),
+                        ),
                         child: const Text('Renovar agora'),
                       ),
                     )
@@ -140,7 +147,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 text: _error!,
                 foreground: BD.red,
                 background: BD.redBg,
-                action: TextButton(onPressed: _load, child: const Text('Tentar')),
+                action:
+                    TextButton(onPressed: _load, child: const Text('Tentar')),
               )
             else
               Row(

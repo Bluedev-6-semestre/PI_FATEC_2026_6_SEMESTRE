@@ -104,6 +104,19 @@ try {
          FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
          FOREIGN KEY (maquina_id) REFERENCES maquinas(id)
      )");
+     $pdo->exec("CREATE TABLE IF NOT EXISTS assinaturas (
+         id INT AUTO_INCREMENT PRIMARY KEY,
+         usuario_id INT NOT NULL,
+         mp_preapproval_id VARCHAR(100) NULL UNIQUE,
+         external_reference VARCHAR(100) NOT NULL,
+         plano VARCHAR(100) NOT NULL,
+         valor DECIMAL(10,2) NOT NULL,
+         status VARCHAR(20) NOT NULL,
+         init_point TEXT NULL,
+         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+         FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
+     )");
      $stmt = $pdo->prepare(
          "SELECT IS_NULLABLE FROM information_schema.COLUMNS
           WHERE TABLE_SCHEMA = :dbname AND TABLE_NAME = 'ocorrencias' AND COLUMN_NAME = 'maquina_id'"
