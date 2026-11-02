@@ -1,0 +1,84 @@
+
+services:
+  mariadb:
+    image: mariadb:10.11
+    container_name: bluedev-mariadb
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: bluedev
+      MARIADB_USER: bluedev
+      MARIADB_PASSWORD: bluedev
+      MARIADB_ROOT_PASSWORD: bluedev_root
+    ports:
+      - "3307:3306"
+    volumes:
+      - bluedev-db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  machine-service:
+    build:
+      context: ./microservicos/machine-service
+    container_name: bluedev-machine-service
+    restart: unless-stopped
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mariadb:3306/bluedev
+      SPRING_DATASOURCE_USERNAME: bluedev
+      SPRING_DATASOURCE_PASSWORD: bluedev
+    depends_on:
+      mariadb:
+        condition: service_healthy
+
+  occurrence-service:
+    build:
+      context: ./microservicos/occurrence-service
+    container_name: bluedev-occurrence-service
+    restart: unless-stopped
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mariadb:3306/bluedev
+      SPRING_DATASOURCE_USERNAME: bluedev
+      SPRING_DATASOURCE_PASSWORD: bluedev
+      MACHINE_SERVICE_URL: http://machine-service:8081
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      machine-service:
+        condition: service_started
+
+  user-service:
+    build:
+      context: ./microservicos/user-service
+    container_name: bluedev-user-service
+    restart: unless-stopped
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mariadb:3306/bluedev
+      SPRING_DATASOURCE_USERNAME: bluedev
+      SPRING_DATASOURCE_PASSWORD: bluedev
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      machine-service:
+        condition: service_started
+
+  api-gateway:
+    build:
+      context: ./microservicos/api-gateway
+    container_name: bluedev-api-gateway
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      USER_SERVICE_URL: http://user-service:8083
+      MACHINE_SERVICE_URL: http://machine-service:8081
+      OCCURRENCE_SERVICE_URL: http://occurrence-service:8082
+    depends_on:
+      - machine-service
+      - occurrence-service
+      - user-service
+
+volumes:
+  bluedev-db-data:

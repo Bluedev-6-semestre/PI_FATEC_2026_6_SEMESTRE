@@ -1,160 +1,289 @@
-# 📌 PI_FATEC_2026_6_SEMESTRE
-## BlueDev – Sistema de Lembretes e Ocorrências
+# BlueDev – Sistema de Gestão de Ocorrências
 
----
+Projeto Integrador (PI) – Fatec | 6º Semestre – 2026
 
-### **Descrição**
+## Sobre o Projeto
 
-O **BlueDev** é uma aplicação para gestão de alertas corretivos e preventivos em empresas, atualmente em fase de expansão: a versão **web** está em melhoramento contínuo e uma versão **mobile** está em desenvolvimento com Flutter.
+O **BlueDev** é um sistema voltado à gestão de ocorrências e alertas corretivos e preventivos em empresas. Seu objetivo é facilitar a comunicação de problemas internos, organizar o acompanhamento das ocorrências e melhorar a rastreabilidade das ações realizadas.
 
-**Funcionalidades principais:**
+A solução conta com aplicações Web e Mobile e está passando por uma evolução arquitetural, com a implementação de uma API baseada em microserviços utilizando Java e Spring Boot.
+
+## Funcionalidades
 
 - Registro de ocorrências pelos funcionários.
-- Visualização detalhada das ocorrências em **modal interativo**, sem sair da página.
-- Administração e acompanhamento das ocorrências por gestores, incluindo **validação, edição e exclusão**.
-- **Remoção em lote** com confirmação de segurança.
+- Consulta e acompanhamento de ocorrências.
+- Visualização detalhada das ocorrências.
+- Administração de ocorrências por gestores.
+- Cadastro, edição e exclusão de informações.
+- Diferenciação de acesso entre usuários e administradores.
+- Gerenciamento de máquinas.
+- Autenticação de usuários.
 
-O sistema contribui para **agilidade, organização e rastreabilidade** dos processos internos da empresa.
+## Arquitetura
 
----
+O backend está organizado em uma arquitetura de microserviços, centralizando o acesso por meio de um API Gateway.
 
-### **Equipe**
+Cada serviço possui responsabilidades específicas:
 
-| Frente  | Responsáveis                          | Status                  |
-|---------|----------------------------------------|--------------------------|
-| Web     | Caio Betegheli, Matheus Guedes         | Em melhoramento          |
-| Mobile  | Davi Boneli, Melissa Vieira            | Em desenvolvimento       |
+| Serviço | Responsabilidade | Porta |
+|---|---|---|
+| API Gateway | Receber e encaminhar as requisições aos microserviços | 8080 |
+| User Service | Gerenciamento e autenticação de usuários | 8083 |
+| Machine Service | Gerenciamento de máquinas | 8081 |
+| Occurrence Service | Gerenciamento de ocorrências | 8082 |
+| MariaDB | Armazenamento dos dados | 3306 (interno) |
 
----
+### Comunicação entre os serviços
 
-### **Tecnologias Utilizadas**
+- O frontend realiza as requisições através do API Gateway.
+- O Gateway encaminha as requisições para o microserviço correspondente.
+- O Occurrence Service utiliza OpenFeign para consultar o Machine Service e validar referências de máquinas.
+- Os microserviços utilizam o MariaDB para persistência dos dados.
 
-**Web:**
-- **PHP** – Backend e lógica de negócios.
-- **JavaScript (ES6)** – Funcionalidades dinâmicas e modais.
-- **HTML5** – Estrutura das páginas.
-- **CSS3** – Layout responsivo e estilização.
+### Diagrama da arquitetura
 
-**Mobile:**
-- **Flutter** – Framework para desenvolvimento multiplataforma (iOS/Android) a partir de uma única base de código.
-- **Dart** – Linguagem de programação utilizada pelo Flutter.
+```mermaid
+flowchart TD
+    Frontend["Aplicações Web / Mobile"]
+    Gateway["API Gateway - 8080"]
 
----
+    User["User Service - 8083"]
+    Machine["Machine Service - 8081"]
+    Occurrence["Occurrence Service - 8082"]
 
-### **Funcionalidades**
+    Database[("MariaDB")]
 
-- Cadastro, edição e remoção de ocorrências.
-- **Modal para visualização completa** da ocorrência.
-- Diferenciação de acesso entre **administradores e usuários comuns**.
-- Interface **responsiva e amigável**.
+    Frontend --> Gateway
 
----
+    Gateway --> User
+    Gateway --> Machine
+    Gateway --> Occurrence
 
-### **Público-alvo**
+    Occurrence -->|"OpenFeign"| Machine
 
-- **Funcionários** – registram alertas e ocorrências.
-- **Administradores/Gestores** – validam, acompanham e rastreiam ações corretivas e preventivas.
+    User --> Database
+    Machine --> Database
+    Occurrence --> Database
+```
 
----
+## Tecnologias Utilizadas
 
-### **Objetivos do Projeto**
+### Backend
+
+- **Java 21** – Linguagem de programação.
+- **Spring Boot 4.1.2** – Desenvolvimento dos microserviços.
+- **Spring Data JPA** – Persistência e acesso aos dados.
+- **Spring Cloud Gateway** – Roteamento centralizado das requisições.
+- **OpenFeign** – Comunicação HTTP entre microserviços.
+- **Flyway** – Controle de versão e execução das migrations do banco.
+- **Gradle** – Gerenciamento de dependências e build.
+- **Lombok** – Redução de código repetitivo.
+
+### Banco de Dados
+
+- **MariaDB 10.11** – Banco de dados relacional.
+
+### Infraestrutura
+
+- **Docker** – Conteinerização das aplicações.
+- **Docker Compose** – Orquestração dos containers.
+
+### Frontend
+
+- **PHP** – Backend da implementação Web original.
+- **JavaScript (ES6)** – Funcionalidades dinâmicas.
+- **HTML5 e CSS3** – Estrutura e estilização.
+- **Flutter e Dart** – Desenvolvimento do aplicativo Mobile.
+
+## Estrutura do Projeto
+
+```text
+PI_FATEC_2026_6_SEMESTRE/
+│
+├── microservicos/
+│   ├── api-gateway/
+│   │   ├── Dockerfile
+│   │   └── src/
+│   │
+│   ├── user-service/
+│   │   ├── Dockerfile
+│   │   └── src/
+│   │
+│   ├── machine-service/
+│   │   ├── Dockerfile
+│   │   └── src/
+│   │
+│   └── occurrence-service/
+│       ├── Dockerfile
+│       └── src/
+│
+├── Bluedev - Web/
+│   └── Front-end/
+│
+├── Bluedev - Mobile/
+│   ├── lib/
+│   └── pubspec.yaml
+│
+├── docker-compose.yml
+└── README.md
+```
+
+## Instalação e Execução
+
+### Pré-requisitos
+
+Antes de iniciar o projeto, instale:
+
+- [Git](https://git-scm.com/)
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+- Docker Compose (incluído no Docker Desktop).
+
+### 1. Clonar o repositório
+
+```bash
+git clone https://github.com/seu-usuario/PI_FATEC_2026_6_SEMESTRE.git
+```
+
+Entre na pasta do projeto:
+
+```bash
+cd PI_FATEC_2026_6_SEMESTRE
+```
+
+### 2. Iniciar os microserviços
+
+Certifique-se de que o Docker Desktop esteja em execução.
+
+Na raiz do projeto, execute:
+
+```bash
+docker compose up -d --build
+```
+
+Esse comando realiza o build das imagens e inicia os seguintes serviços:
+
+- MariaDB;
+- Machine Service;
+- Occurrence Service;
+- User Service;
+- API Gateway.
+
+Na primeira execução, o processo pode demorar mais devido ao download das imagens e dependências e à compilação dos projetos.
+
+### 3. Verificar os containers
+
+Para verificar se os serviços estão em execução:
+
+```bash
+docker compose ps
+```
+
+Para acompanhar os logs:
+
+```bash
+docker compose logs -f
+```
+
+Para visualizar os logs de um serviço específico:
+
+```bash
+docker compose logs -f machine-service
+```
+
+### 4. Acessar a API
+
+O API Gateway centraliza o acesso aos microserviços.
+
+Endereço-base:
+
+```text
+http://localhost:8080
+```
+
+Principais rotas:
+
+| Serviço | Endpoint |
+|---|---|
+| Usuários | `/api/usuarios/**` |
+| Máquinas | `/api/maquinas/**` |
+| Ocorrências | `/api/ocorrencias/**` |
+
+### 5. Acessar a documentação Swagger
+
+A documentação dos três microserviços está centralizada no Gateway.
+
+Acesse:
+
+```text
+http://localhost:8080/swagger-ui.html
+```
+
+A interface permite consultar os endpoints e executar requisições diretamente pela documentação.
+
+### 6. Acessar o banco de dados
+
+O MariaDB pode ser acessado por ferramentas como DBeaver.
+
+Configurações para conexão local:
+
+| Campo | Valor |
+|---|---|
+| Host | `localhost` |
+| Porta | `3307` |
+| Database | `bluedev` |
+| Usuário | `bluedev` |
+| Senha | `bluedev` |
+
+As tabelas são gerenciadas por migrations do Flyway.
+
+### 7. Parar os serviços
+
+Para parar e remover os containers:
+
+```bash
+docker compose down
+```
+
+Os dados do banco permanecem armazenados no volume Docker.
+
+**Atenção:** não utilize `docker compose down -v` se desejar preservar os dados, pois esse comando também remove os volumes.
+
+Para iniciar novamente:
+
+```bash
+docker compose up -d
+```
+
+## Equipe
+
+| Frente | Responsáveis | Status |
+|---|---|---|
+| Web | Caio Betegheli, Matheus Guedes | Em melhoramento |
+| Mobile | Davi Boneli, Melissa Vieira | Em desenvolvimento |
+| Backend / Microserviços | Matheus Guedes | Implementação e integração |
+
+## Público-alvo
+
+- **Funcionários:** registram ocorrências e comunicam problemas internos.
+- **Administradores e gestores:** acompanham, validam e gerenciam as ocorrências.
+- **Empresas:** utilizam a solução para organizar processos corretivos e preventivos.
+
+## Objetivos do Projeto
 
 - Melhorar a comunicação de problemas internos.
 - Aumentar a eficiência na resolução de ocorrências.
-- Garantir **rastreabilidade** e histórico completo das ações.
-- Oferecer interface interativa com **modais** para maior usabilidade.
-- Expandir o acesso ao sistema por meio de uma versão mobile em Flutter.
+- Garantir rastreabilidade das ações realizadas.
+- Facilitar o gerenciamento de máquinas e ocorrências.
+- Disponibilizar acesso por diferentes plataformas.
+- Evoluir a arquitetura do sistema para uma estrutura baseada em microserviços.
 
----
+## Status do Projeto
 
-### **Instalação**
+**Em desenvolvimento.**
 
-**Web:**
-1. Clone este repositório:
-```bash
-git clone https://github.com/seu-usuario/BlueDev.git
-```
-2. Configure o banco de dados em `web/bd.php`.
-3. Suba os arquivos da pasta `web/` em um servidor com suporte a PHP.
-
-**Mobile:**
-1. Certifique-se de ter o [Flutter](https://docs.flutter.dev/get-started/install) instalado.
-2. Configure o PHP e o MySQL e publique `Bluedev - Web/Front-end` em um servidor acessível pelo dispositivo. A API fica na pasta `api/`.
-3. No PowerShell aberto na raiz do repositório, entre na pasta do projeto mobile e confirme que o manifesto existe:
-```powershell
-Set-Location ".\Bluedev - Mobile"
-Test-Path .\pubspec.yaml
-```
-4. Gere os projetos nativos Android/iOS:
-```bash
-flutter create --platforms=android,ios .
-```
-5. Instale as dependências e execute:
-```bash
-flutter pub get
-flutter run
-```
-6. Na tela de login, informe a URL completa da API, terminando em `/api`. Use HTTPS em dispositivos reais; no emulador Android, `10.0.2.2` aponta para o computador hospedeiro.
-7. Para compilar uma versão Android de produção, confirme que `android/app/src/main/AndroidManifest.xml` declara a permissão `INTERNET`. Em desenvolvimento local com HTTP, habilite tráfego sem TLS no Android; prefira HTTPS fora do ambiente de desenvolvimento.
-
-#### Configuração da API no aplicativo
-
-O aplicativo não se conecta diretamente ao MySQL: ele envia requisições HTTP para os arquivos PHP da API. Publique a pasta `Bluedev - Web/Front-end` em um servidor com PHP e configure o acesso ao MySQL em `Bluedev - Web/Front-end/bd.php`. O servidor precisa conseguir acessar o banco de dados.
-
-Na tela inicial do aplicativo, preencha **Endereço da API** com o endereço-base da pasta `api`, sem acrescentar o nome de um arquivo PHP. Por exemplo, se a pasta `Front-end` estiver publicada na raiz do servidor:
-
-```text
-https://meu-dominio.com/api
-```
-
-Se estiver publicada em um subdiretório, inclua esse caminho:
-
-```text
-https://meu-dominio.com/Front-end/api
-```
-
-O aplicativo acrescenta os endpoints necessários a esse endereço, como `login.php`, `logout.php`, `ocorrencias.php` e `maquinas.php`. Portanto, não inclua esses nomes na URL informada. A URL pode terminar ou não com `/`.
-
-Para testar no emulador Android com o servidor PHP rodando no computador, execute na raiz do repositório:
-
-```powershell
-php -S 0.0.0.0:8000 -t ".\Bluedev - Web\Front-end"
-```
-
-No emulador Android, o endereço inicial é `http://10.0.2.2:8000/api`; `10.0.2.2` aponta para o computador hospedeiro. No app Windows, use `http://localhost:8000/api`. Em um celular físico, configure o IP local do computador, por exemplo `http://192.168.1.10:8000/api`, e permita a conexão na rede/firewall. O PHP e o MySQL também devem estar em execução.
-
-No emulador Android, o app já abre com `http://10.0.2.2:8000/api` preenchido. Para usar outro endereço sem digitá-lo, defina `API_BASE_URL` ao iniciar o app:
-
-```powershell
-flutter run --dart-define=API_BASE_URL=https://meu-dominio.com/api
-```
-
-O endereço é apenas a localização do servidor, não uma chave de API. O campo continua editável na tela de login. Em celular físico, configure o IP do computador na rede local ou o domínio do servidor; `10.0.2.2` funciona apenas no emulador Android. O acesso continua protegido pelo login individual de cada usuário, sem uma chave compartilhada no app. Em Android, requisições locais por HTTP podem exigir habilitar tráfego sem TLS na configuração nativa de desenvolvimento. Para servidores acessíveis pela internet, use HTTPS.
-
----
-
-### 📂 **Estrutura de Arquivos**
-
-```
-PI_FATEC_2026_6_SEMESTRE/
-├─ Bluedev - Web/
-│  └─ Front-end/
-│     ├─ api/                 # API JSON para o aplicativo mobile
-│     ├─ bd.php
-│     └─ ocorrencias.php
-├─ Bluedev - Mobile/
-│  ├─ lib/
-│  │  ├─ api_client.dart
-│  │  └─ main.dart
-│  └─ pubspec.yaml
-└─ README.md
-```
-
----
-
-### 📌 **Status do Projeto**
-
-Em desenvolvimento
-
-- **Web:** implementação de cadastro, edição, remoção e modal de visualização de ocorrências (melhoramento contínuo).
-- **Mobile:** aplicativo Flutter integrado à API PHP para login e gestão de ocorrências.
+- **Web:** aplicação desenvolvida, com melhorias contínuas.
+- **Mobile:** aplicação Flutter em desenvolvimento.
+- **Backend:** microserviços implementados com Java e Spring Boot.
+- **API Gateway:** implementado e integrado aos três microserviços.
+- **Banco de dados:** MariaDB integrado, com migrations gerenciadas pelo Flyway.
+- **Docker:** conteinerização e execução integrada dos serviços implementadas.
