@@ -7,9 +7,11 @@ $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method === 'GET') {
     $status = isset($_GET['status']) ? trim($_GET['status']) : '';
-    $sql = 'SELECT o.id, o.titulo, o.tipo, o.status, o.descricao, o.imagem, '
-        . 'o.maquina_id, o.data_criacao, m.nome AS nome_maquina '
-        . 'FROM ocorrencias o LEFT JOIN maquinas m ON o.maquina_id = m.id';
+    $sql = 'SELECT o.id, o.usuario_id, u.usuario AS usuario_nome, o.titulo, '
+        . 'o.tipo, o.status, o.descricao, o.imagem, o.maquina_id, '
+        . 'o.data_criacao, m.nome AS nome_maquina '
+        . 'FROM ocorrencias o LEFT JOIN maquinas m ON o.maquina_id = m.id '
+        . 'LEFT JOIN usuarios u ON o.usuario_id = u.id';
     $conditions = [];
     $params = [];
 
