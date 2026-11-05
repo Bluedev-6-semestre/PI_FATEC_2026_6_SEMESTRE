@@ -57,6 +57,8 @@ if ($method === 'GET') {
             CURLOPT_CONNECTTIMEOUT => 5,
             CURLOPT_TIMEOUT => 12,
             CURLOPT_FOLLOWLOCATION => false,
+            // A BrasilAPI recusa (HTTP 429) requisições sem User-Agent.
+            CURLOPT_USERAGENT => 'BlueDev/1.0',
             CURLOPT_HTTPHEADER => ['Accept: application/json']
         ]);
         $response = curl_exec($curl);

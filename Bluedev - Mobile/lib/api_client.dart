@@ -38,12 +38,16 @@ class ApiClient {
   }) async {
     final request = await _http.openUrl(method, _uri(path, query));
     request.headers.set(HttpHeaders.acceptHeader, 'application/json');
-    if (body != null) {
-      request.headers.contentType = ContentType.json;
-      request.write(jsonEncode(body));
-    }
+    // Os cabeçalhos ficam imutáveis depois que o corpo é escrito, então o
+    // cookie da sessão precisa vir antes.
     if (authenticated && _sessionCookie != null) {
       request.headers.set(HttpHeaders.cookieHeader, _sessionCookie!);
+    }
+    if (body != null) {
+      final bytes = utf8.encode(jsonEncode(body));
+      request.headers.contentType = ContentType.json;
+      request.contentLength = bytes.length;
+      request.add(bytes);
     }
 
     final response = await request.close();
