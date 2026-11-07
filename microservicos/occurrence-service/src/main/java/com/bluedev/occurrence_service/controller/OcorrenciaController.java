@@ -4,11 +4,13 @@ package com.bluedev.occurrence_service.controller;
 import com.bluedev.occurrence_service.dto.AtualizarOcorrenciaRequestDto;
 import com.bluedev.occurrence_service.dto.CriarOcorrenciaRequestDto;
 import com.bluedev.occurrence_service.dto.OcorrenciaResponseDto;
+import com.bluedev.occurrence_service.dto.ImagemResponseDto;
 import com.bluedev.occurrence_service.service.OcorrenciaService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -47,6 +49,25 @@ public class OcorrenciaController {
             @Valid @RequestBody AtualizarOcorrenciaRequestDto request) {
 
         return ocorrenciaService.atualizar(id, request);
+    }
+
+    @PostMapping(value = "/{id}/imagem", consumes = "multipart/form-data")
+    public ResponseEntity<ImagemResponseDto> enviarImagem(
+            @PathVariable Integer id,
+            @RequestPart("arquivo") MultipartFile arquivo) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ocorrenciaService.enviarImagem(id, arquivo));
+    }
+
+    @GetMapping("/{id}/imagem")
+    public ImagemResponseDto obterImagem(@PathVariable Integer id) {
+        return ocorrenciaService.obterImagem(id);
+    }
+
+    @DeleteMapping("/{id}/imagem")
+    public ResponseEntity<Void> excluirImagem(@PathVariable Integer id) {
+        ocorrenciaService.excluirImagem(id);
+        return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{id}")
