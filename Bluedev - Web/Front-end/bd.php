@@ -1,14 +1,15 @@
 <?php
-$host = "localhost";
-$dbname = "bluedev";
-$user = "root";
-$pass = "";
+$host   = getenv('MYSQLHOST')     ?: 'localhost';
+$port   = getenv('MYSQLPORT')     ?: '3306';
+$dbname = getenv('MYSQLDATABASE') ?: 'bluedev';
+$user   = getenv('MYSQLUSER')     ?: 'root';
+$pass   = getenv('MYSQLPASSWORD') ?: '';
 
 try {
-    $pdo = new PDO("mysql:host=$host;charset=utf8", $user, $pass);
+    $pdo = new PDO("mysql:host=$host;port=$port;charset=utf8mb4", $user, $pass);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    $pdo->exec("CREATE DATABASE IF NOT EXISTS $dbname CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci");
-    $pdo->exec("USE $dbname");
+    $pdo->exec("CREATE DATABASE IF NOT EXISTS `$dbname` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci");
+    $pdo->exec("USE `$dbname`");
 
     $pdo->exec("CREATE TABLE IF NOT EXISTS usuarios (
         id INT AUTO_INCREMENT PRIMARY KEY,
