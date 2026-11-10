@@ -24,9 +24,6 @@ public record AtualizarOcorrenciaRequestDto(
         @Size(max = 50)
         String status,
 
-        String descricao,
-
-        @Size(max = 255)
-        String imagem
+        String descricao
 
 ) {}
