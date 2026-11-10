@@ -9,4 +9,4 @@ COPY . /var/www/html/
 WORKDIR /var/www/html
 RUN if [ -f composer.json ]; then composer install --no-dev --no-interaction; fi
 RUN mkdir -p /var/www/html/uploads && chown -R www-data:www-data /var/www/html/uploads
-EXPOSE 80
+EXPOSE 80 
