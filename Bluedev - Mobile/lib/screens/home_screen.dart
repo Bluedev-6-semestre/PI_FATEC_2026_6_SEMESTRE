@@ -6,27 +6,19 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../main.dart';
 import '../theme.dart';
 import '../widgets.dart';
-import 'employees_screen.dart';
-import 'machines_screen.dart';
 import 'notifications_screen.dart';
 import 'occurrence_detail_screen.dart';
-import 'subscription_screen.dart';
-import 'suppliers_screen.dart';
 
-/// M02 · Início ADM (pagamento validado)
-/// M03 · Início ADM (teste grátis)
-/// M05 · Início FUNC
+/// Início (ADM e FUNC): resumo e ocorrências recentes.
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
     required this.session,
     required this.onSeeAll,
-    required this.onReports,
     super.key,
   });
 
   final Session session;
   final VoidCallback onSeeAll;
-  final VoidCallback onReports;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -208,7 +200,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    final trial = _session.isAdmin && _session.plan == PlanStatus.teste;
     final recent = (_items ?? []).take(3).toList();
 
     return Scaffold(
@@ -264,41 +255,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             Text('Olá, ${_session.greetingName}', style: BD.caption),
             Text('Seja bem-vindo!', style: BD.screenTitle),
             const SizedBox(height: 12),
-            if (_session.isAdmin) ...[
-              trial
-                  ? InfoBanner(
-                      icon: Icons.warning_amber_rounded,
-                      text:
-                          'Teste grátis vence em ${_session.trialDaysLeft} dias',
-                      foreground: BD.amber,
-                      background: BD.amberBg,
-                      action: FilledButton(
-                        style: FilledButton.styleFrom(
-                          backgroundColor: BD.amber,
-                          minimumSize: const Size(0, 34),
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          textStyle: BD.caption.copyWith(
-                              fontWeight: FontWeight.w600, fontSize: 11),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8)),
-                        ),
-                        onPressed: () => Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (_) =>
-                                SubscriptionScreen(session: _session),
-                          ),
-                        ),
-                        child: const Text('Renovar agora'),
-                      ),
-                    )
-                  : const InfoBanner(
-                      icon: Icons.check_rounded,
-                      text: 'Pagamento efetuado',
-                      foreground: BD.green,
-                      background: BD.greenBg,
-                    ),
-              const SizedBox(height: 12),
-            ],
             if (_error != null)
               InfoBanner(
                 icon: Icons.wifi_off_rounded,
@@ -322,48 +278,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   ),
                 ],
               ),
-            if (_session.isAdmin) ...[
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  _Shortcut(
-                    icon: Icons.local_shipping_outlined,
-                    label: 'Fornec.',
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => SuppliersScreen(session: _session),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  _Shortcut(
-                    icon: Icons.group_outlined,
-                    label: 'Funcion.',
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => EmployeesScreen(session: _session),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  _Shortcut(
-                    icon: Icons.settings_suggest_outlined,
-                    label: 'Máquinas',
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => MachinesScreen(session: _session),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  _Shortcut(
-                    icon: Icons.bar_chart_rounded,
-                    label: 'Relatórios',
-                    onTap: widget.onReports,
-                  ),
-                ],
-              ),
-            ],
             const SizedBox(height: 16),
             Row(
               children: [
@@ -423,47 +337,6 @@ class _StatCard extends StatelessWidget {
             const SizedBox(height: 2),
             Text(value == null ? '–' : '$value',
                 style: BD.screenTitle.copyWith(fontSize: 20)),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _Shortcut extends StatelessWidget {
-  const _Shortcut({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: BDCard(
-        onTap: onTap,
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        child: Column(
-          children: [
-            Container(
-              width: 34,
-              height: 34,
-              decoration: BoxDecoration(
-                color: BD.iconBg,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(icon, size: 18, color: BD.primary),
-            ),
-            const SizedBox(height: 6),
-            Text(label,
-                style: BD.caption.copyWith(
-                    fontSize: 10.5,
-                    color: BD.navy,
-                    fontWeight: FontWeight.w600)),
           ],
         ),
       ),

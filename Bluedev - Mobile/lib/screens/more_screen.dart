@@ -3,75 +3,11 @@ import 'package:flutter/material.dart';
 import '../main.dart';
 import '../theme.dart';
 import '../widgets.dart';
-import 'employees_screen.dart';
-import 'machines_screen.dart';
-import 'reports_screen.dart';
-import 'subscription_screen.dart';
-import 'suppliers_screen.dart';
 
-/// Aba "Mais" do ADM (M06): cadastros, assinatura e sair.
-class MoreScreen extends StatelessWidget {
-  const MoreScreen({required this.session, super.key});
-
-  final Session session;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Mais')),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(BD.margin, 16, BD.margin, 40),
-        children: [
-          const Align(alignment: Alignment.centerLeft, child: ClientLogo()),
-          const SizedBox(height: 14),
-          _MenuItem(
-            icon: Icons.local_shipping_outlined,
-            label: 'Fornecedores',
-            onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
-              builder: (_) => SuppliersScreen(session: session),
-            )),
-          ),
-          _MenuItem(
-            icon: Icons.group_outlined,
-            label: 'Funcionários',
-            onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
-              builder: (_) => EmployeesScreen(session: session),
-            )),
-          ),
-          _MenuItem(
-            icon: Icons.settings_suggest_outlined,
-            label: 'Máquinas',
-            onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
-              builder: (_) => MachinesScreen(session: session),
-            )),
-          ),
-          _MenuItem(
-            icon: Icons.bar_chart_rounded,
-            label: 'Relatórios',
-            onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
-              builder: (_) => ReportsScreen(session: session),
-            )),
-          ),
-          _MenuItem(
-            icon: Icons.credit_card_rounded,
-            label: 'Assinatura',
-            onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(
-              builder: (_) => SubscriptionScreen(session: session),
-            )),
-          ),
-          _MenuItem(
-            icon: Icons.logout_rounded,
-            label: 'Sair',
-            danger: true,
-            onTap: () => logout(context, session),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Aba "Perfil" do FUNC: dados do usuário e sair.
+/// Aba "Perfil" (ADM e FUNC): dados do usuário e sair.
+///
+/// Cadastros, relatórios e assinatura ficam no backoffice web; o app cuida
+/// apenas das ocorrências.
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({required this.session, super.key});
 
@@ -79,11 +15,14 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final role = session.isAdmin ? 'Administrador' : 'Funcionário';
     return Scaffold(
       appBar: AppBar(title: const Text('Perfil')),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(BD.margin, 16, BD.margin, 40),
         children: [
+          const Align(alignment: Alignment.centerLeft, child: ClientLogo()),
+          const SizedBox(height: 14),
           BDCard(
             child: Row(
               children: [
@@ -102,7 +41,7 @@ class ProfileScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(session.greetingName, style: BD.cardTitle),
-                    Text('Usuário: ${session.name} · Funcionário',
+                    Text('Usuário: ${session.name} · $role',
                         style: BD.caption),
                   ],
                 ),

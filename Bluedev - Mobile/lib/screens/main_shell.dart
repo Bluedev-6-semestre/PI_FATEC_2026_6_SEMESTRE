@@ -7,10 +7,10 @@ import 'home_screen.dart';
 import 'more_screen.dart';
 import 'occurrence_form_screen.dart';
 import 'occurrences_screen.dart';
-import 'reports_screen.dart';
 
-/// Estrutura principal: abas Início, Ocorrências, Relatórios e Mais/Perfil,
-/// com o botão central (+) que sempre abre Nova ocorrência (M10).
+/// Estrutura principal: abas Início, Ocorrências e Perfil, com o botão
+/// central (+) que sempre abre Nova ocorrência (M10). Cadastros, relatórios
+/// e assinatura ficam no backoffice web.
 class MainShell extends StatefulWidget {
   const MainShell({required this.session, super.key});
 
@@ -41,22 +41,14 @@ class _MainShellState extends State<MainShell> {
       HomeScreen(
         session: _session,
         onSeeAll: () => setState(() => _tab = 1),
-        onReports: () => setState(() => _tab = 2),
       ),
       OccurrencesScreen(session: _session, onNew: _newOccurrence),
-      ReportsScreen(session: _session),
-      _session.isAdmin
-          ? MoreScreen(session: _session)
-          : ProfileScreen(session: _session),
+      ProfileScreen(session: _session),
     ];
     return Scaffold(
       body: IndexedStack(index: _tab, children: pages),
       bottomNavigationBar: _BottomBar(
         index: _tab,
-        lastLabel: _session.isAdmin ? 'Mais' : 'Perfil',
-        lastIcon: _session.isAdmin
-            ? Icons.grid_view_rounded
-            : Icons.person_outline_rounded,
         onSelect: (i) => setState(() => _tab = i),
         onCenter: _newOccurrence,
       ),
@@ -68,22 +60,19 @@ class _MainShellState extends State<MainShell> {
 class _BottomBar extends StatelessWidget {
   const _BottomBar({
     required this.index,
-    required this.lastLabel,
-    required this.lastIcon,
     required this.onSelect,
     required this.onCenter,
   });
 
   final int index;
-  final String lastLabel;
-  final IconData lastIcon;
   final ValueChanged<int> onSelect;
   final VoidCallback onCenter;
 
-  Widget _item(int i, IconData icon, String label) {
+  Widget _item(int i, IconData icon, String label, {int flex = 1}) {
     final active = index == i;
     final color = active ? BD.primary : BD.muted;
     return Expanded(
+      flex: flex,
       child: InkWell(
         onTap: () => onSelect(i),
         child: Column(
@@ -125,8 +114,8 @@ class _BottomBar extends StatelessWidget {
                   _item(0, Icons.home_outlined, 'Início'),
                   _item(1, Icons.format_list_bulleted_rounded, 'Ocorrências'),
                   const Expanded(child: SizedBox()),
-                  _item(2, Icons.bar_chart_rounded, 'Relatórios'),
-                  _item(3, lastIcon, lastLabel),
+                  // Ocupa os dois espaços à direita para o (+) seguir no centro.
+                  _item(2, Icons.person_outline_rounded, 'Perfil', flex: 2),
                 ],
               ),
             ),

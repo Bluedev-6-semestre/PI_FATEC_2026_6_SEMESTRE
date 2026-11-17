@@ -17,9 +17,6 @@ const apiUrl = 'http://10.0.2.2:8000/api';
 final stamp = DateTime.now().millisecondsSinceEpoch % 100000;
 final occurrenceTitle = '[IT] Vazamento $stamp';
 final funcOccurrenceTitle = '[IT] Correia FUNC $stamp';
-final supplierName = '[IT] Fornecedor $stamp';
-final employeeName = '[IT] Funcionario $stamp';
-final machineName = '[IT] Maquina $stamp';
 
 /// Só textos exibidos (o `find.text` também acha o que foi digitado em campos).
 Finder label(String text) =>
@@ -144,21 +141,6 @@ void main() {
           await api.deleteOcorrencia(int.parse('${o['id']}'));
         }
       }
-      for (final s in await api.getFornecedores()) {
-        if ('${s['nome']}'.startsWith('[IT]')) {
-          await api.deleteFornecedor(int.parse('${s['id']}'));
-        }
-      }
-      for (final e in await api.getFuncionarios()) {
-        if ('${e['nome']}'.startsWith('[IT]')) {
-          await api.deleteFuncionario(int.parse('${e['id']}'));
-        }
-      }
-      for (final m in await api.getMaquinasDetalhadas()) {
-        if ('${m['nome']}'.startsWith('[IT]')) {
-          await api.deleteMaquina(int.parse('${m['id']}'));
-        }
-      }
     } finally {
       api.close();
     }
@@ -175,62 +157,24 @@ void main() {
     await waitFor(tester, find.textContaining('inválidos'));
   });
 
-  testWidgets('ADM · início, cadastros e assinatura', (tester) async {
+  testWidgets('ADM · início só com ocorrências e perfil', (tester) async {
     await login(tester, 'ADM', '1234');
     expect(find.text('Olá, Administrador'), findsOneWidget);
-    expect(find.text('Pagamento efetuado'), findsOneWidget);
     expect(find.text('Pendentes'), findsOneWidget);
     expect(find.text('Ocorrências recentes'), findsOneWidget);
+    expect(find.byTooltip('Notificações'), findsOneWidget);
 
-    // M13/M14 · Fornecedores
-    await tap(tester, find.text('Fornec.'));
-    await waitFor(tester, find.byTooltip('Adicionar fornecedor'));
-    await tap(tester, find.byTooltip('Adicionar fornecedor'));
-    await typeInto(tester, '00.000.000/0001-00', '11222333000181');
-    await typeInto(tester, 'Digite o nome da empresa', supplierName);
-    await typeInto(tester, 'Digite a categoria', 'Peças');
-    await typeInto(tester, '(00) 00000-0000', '19999990000');
-    await typeInto(tester, 'Digite o endereço ou CEP', 'Rua do Teste, 10');
-    await tap(tester, find.text('Adicionar'));
-    await waitFor(tester, label(supplierName));
-    await tap(tester, find.byTooltip('Remover fornecedor'));
-    await tap(tester, find.text('Remover').last);
-    await waitGone(tester, label(supplierName));
-    await goBack(tester);
+    // Cadastros, relatórios e assinatura ficaram no backoffice web.
+    for (final removed in [
+      'Pagamento efetuado', 'Fornec.', 'Funcion.', 'Máquinas',
+      'Relatórios', 'Mais', 'Assinatura',
+    ]) {
+      expect(find.text(removed), findsNothing, reason: removed);
+    }
 
-    // M15/M16 · Funcionários
-    await tap(tester, find.text('Funcion.'));
-    await tap(tester, find.byTooltip('Adicionar funcionário'));
-    await typeInto(tester, 'Digite o nome', employeeName);
-    await typeInto(tester, 'Digite a idade', '28');
-    await typeInto(tester, 'Digite a função', 'Operador');
-    await tap(tester, find.text('Adicionar'));
-    await waitFor(tester, label(employeeName));
-    await tap(tester, find.byTooltip('Remover funcionário'));
-    await tap(tester, find.text('Remover').last);
-    await waitGone(tester, label(employeeName));
-    await goBack(tester);
-
-    // M17/M18 · Máquinas
-    await tap(tester, find.text('Máquinas'));
-    await tap(tester, find.byTooltip('Adicionar máquina'));
-    await typeInto(tester, 'Nome da máquina', machineName);
-    await typeInto(tester, 'Código da máquina', 'IT-$stamp');
-    await choose(tester, find.text('Selecione'), 'Ativa');
-    await tap(tester, find.text('Adicionar'));
-    await waitFor(tester, label(machineName));
-    await tap(tester, find.byTooltip('Remover máquina'));
-    await tap(tester, find.text('Remover').last);
-    await waitGone(tester, label(machineName));
-    await goBack(tester);
-
-    // M06 · Mais → M04 Assinatura
-    await tap(tester, find.text('Mais').last);
-    await tap(tester, find.text('Assinatura'));
-    await waitFor(tester, find.text('Plano'));
-    await goBack(tester);
-
-    await logoutFrom(tester, 'Mais');
+    await tap(tester, find.text('Perfil').last);
+    await waitFor(tester, find.text('Usuário: ADM · Administrador'));
+    await logoutFrom(tester, 'Perfil');
   });
 
   testWidgets('ADM · ocorrências: criar, buscar, filtrar, validar, remover',
@@ -286,24 +230,20 @@ void main() {
     await tap(tester, find.text('Remover').last);
     await waitGone(tester, label(occurrenceTitle));
 
-    // M19 · Relatórios
-    await tap(tester, find.text('Relatórios').last);
-    await waitFor(tester, find.text('Ocorrências por tipo'));
-    expect(find.text('Ocorrências por status'), findsOneWidget);
-
     // Notificações (sino)
     await tap(tester, find.text('Início').last);
     await tap(tester, find.byTooltip('Notificações'));
     await waitFor(tester, find.text('Notificações'));
     await goBack(tester);
 
-    await logoutFrom(tester, 'Mais');
+    await logoutFrom(tester, 'Perfil');
   });
 
   testWidgets('FUNC · início, nova ocorrência e permissões', (tester) async {
     await login(tester, 'FUNC', '123');
     expect(find.text('Pagamento efetuado'), findsNothing);
     expect(find.text('Fornec.'), findsNothing);
+    expect(find.text('Relatórios'), findsNothing);
     expect(find.byTooltip('Notificações'), findsNothing);
     expect(find.text('Perfil'), findsOneWidget);
 
@@ -317,9 +257,8 @@ void main() {
     expect(find.byTooltip('Remover'), findsNothing);
     await goBack(tester);
 
-    await tap(tester, find.text('Relatórios').last);
-    await waitFor(tester, find.text('Ocorrências por tipo'));
-
+    await tap(tester, find.text('Perfil').last);
+    await waitFor(tester, find.text('Usuário: FUNC · Funcionário'));
     await logoutFrom(tester, 'Perfil');
   });
 }

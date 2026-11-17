@@ -30,8 +30,6 @@ class BlueDevApp extends StatelessWidget {
   }
 }
 
-enum PlanStatus { pago, teste }
-
 /// Usuário logado + cliente da API, repassado entre as telas.
 class Session {
   Session({required this.api, required this.user});
@@ -52,20 +50,6 @@ class Session {
   static String _capitalize(String value) => value.isEmpty
       ? value
       : value[0].toUpperCase() + value.substring(1).toLowerCase();
-
-  /// A API ainda não informa plano. Usa `plano` da resposta do login se vier,
-  /// ou `--dart-define=PLANO=teste` para ver a tela M03; o padrão é pago (M02).
-  PlanStatus get plan {
-    const override = String.fromEnvironment('PLANO');
-    final value = override.isNotEmpty ? override : '${user['plano'] ?? 'pago'}';
-    return value == 'teste' ? PlanStatus.teste : PlanStatus.pago;
-  }
-
-  int get trialDaysLeft {
-    const override = int.fromEnvironment('DIAS_TESTE', defaultValue: -1);
-    if (override >= 0) return override;
-    return int.tryParse('${user['dias_teste'] ?? ''}') ?? 10;
-  }
 }
 
 Widget homeFor(Session session) => MainShell(session: session);
