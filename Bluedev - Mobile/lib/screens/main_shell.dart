@@ -4,13 +4,13 @@ import '../main.dart';
 import '../theme.dart';
 import '../widgets.dart';
 import 'home_screen.dart';
-import 'more_screen.dart';
 import 'occurrence_form_screen.dart';
 import 'occurrences_screen.dart';
 
-/// Estrutura principal: abas Início, Ocorrências e Perfil, com o botão
-/// central (+) que sempre abre Nova ocorrência (M10). Cadastros, relatórios
-/// e assinatura ficam no backoffice web.
+/// Estrutura principal: Início e Ocorrências, com o botão central (+) que
+/// sempre abre Nova ocorrência (M10). O perfil e o Sair ficam no ícone do
+/// canto superior direito. Cadastros, relatórios e assinatura ficam no
+/// backoffice web.
 class MainShell extends StatefulWidget {
   const MainShell({required this.session, super.key});
 
@@ -43,7 +43,6 @@ class _MainShellState extends State<MainShell> {
         onSeeAll: () => setState(() => _tab = 1),
       ),
       OccurrencesScreen(session: _session, onNew: _newOccurrence),
-      ProfileScreen(session: _session),
     ];
     return Scaffold(
       body: IndexedStack(index: _tab, children: pages),
@@ -68,11 +67,10 @@ class _BottomBar extends StatelessWidget {
   final ValueChanged<int> onSelect;
   final VoidCallback onCenter;
 
-  Widget _item(int i, IconData icon, String label, {int flex = 1}) {
+  Widget _item(int i, IconData icon, String label) {
     final active = index == i;
     final color = active ? BD.primary : BD.muted;
     return Expanded(
-      flex: flex,
       child: InkWell(
         onTap: () => onSelect(i),
         child: Column(
@@ -111,11 +109,10 @@ class _BottomBar extends StatelessWidget {
               ),
               child: Row(
                 children: [
+                  // Três colunas iguais: o (+) fica exatamente no centro.
                   _item(0, Icons.home_outlined, 'Início'),
-                  _item(1, Icons.format_list_bulleted_rounded, 'Ocorrências'),
                   const Expanded(child: SizedBox()),
-                  // Ocupa os dois espaços à direita para o (+) seguir no centro.
-                  _item(2, Icons.person_outline_rounded, 'Perfil', flex: 2),
+                  _item(1, Icons.format_list_bulleted_rounded, 'Ocorrências'),
                 ],
               ),
             ),

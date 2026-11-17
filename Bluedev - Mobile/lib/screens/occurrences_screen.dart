@@ -5,6 +5,7 @@ import '../theme.dart';
 import '../widgets.dart';
 import 'occurrence_detail_screen.dart';
 import 'occurrence_form_screen.dart';
+import 'profile_button.dart';
 import 'remove_occurrences_screen.dart';
 
 /// Status gravados no banco e o rótulo de filtro de cada um.
@@ -186,6 +187,8 @@ class _OccurrencesScreenState extends State<OccurrencesScreen> {
             background: _filters.hasAdvanced ? BD.primary : BD.background,
             onPressed: _openFilters,
           ),
+          const SizedBox(width: 10),
+          ProfileButton(session: _session),
           const SizedBox(width: BD.margin),
         ],
       ),

@@ -8,6 +8,7 @@ import '../theme.dart';
 import '../widgets.dart';
 import 'notifications_screen.dart';
 import 'occurrence_detail_screen.dart';
+import 'profile_button.dart';
 
 /// Início (ADM e FUNC): resumo e ocorrências recentes.
 class HomeScreen extends StatefulWidget {
@@ -244,6 +245,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                   ),
               ],
             ),
+          if (_session.isAdmin) const SizedBox(width: 10),
+          ProfileButton(session: _session),
           const SizedBox(width: BD.margin),
         ],
       ),

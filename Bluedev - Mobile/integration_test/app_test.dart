@@ -108,8 +108,9 @@ Future<void> login(WidgetTester tester, String user, String password) async {
   await waitFor(tester, find.text('Seja bem-vindo!'));
 }
 
-Future<void> logoutFrom(WidgetTester tester, String lastTab) async {
-  await tap(tester, find.text(lastTab).last);
+/// Sai pelo ícone de perfil do canto superior direito.
+Future<void> logout(WidgetTester tester) async {
+  await tap(tester, find.byTooltip('Perfil'));
   await tap(tester, find.text('Sair').last);
   await waitFor(tester, find.text('Entrar'));
 }
@@ -172,9 +173,12 @@ void main() {
       expect(find.text(removed), findsNothing, reason: removed);
     }
 
-    await tap(tester, find.text('Perfil').last);
+    // Barra inferior só com Início e Ocorrências; perfil no canto superior.
+    expect(find.text('Perfil'), findsNothing);
+    await tap(tester, find.byTooltip('Perfil'));
     await waitFor(tester, find.text('Usuário: ADM · Administrador'));
-    await logoutFrom(tester, 'Perfil');
+    await tap(tester, find.text('Sair').last);
+    await waitFor(tester, find.text('Entrar'));
   });
 
   testWidgets('ADM · ocorrências: criar, buscar, filtrar, validar, remover',
@@ -236,7 +240,7 @@ void main() {
     await waitFor(tester, find.text('Notificações'));
     await goBack(tester);
 
-    await logoutFrom(tester, 'Perfil');
+    await logout(tester);
   });
 
   testWidgets('FUNC · início, nova ocorrência e permissões', (tester) async {
@@ -245,7 +249,7 @@ void main() {
     expect(find.text('Fornec.'), findsNothing);
     expect(find.text('Relatórios'), findsNothing);
     expect(find.byTooltip('Notificações'), findsNothing);
-    expect(find.text('Perfil'), findsOneWidget);
+    expect(find.byTooltip('Perfil'), findsOneWidget);
 
     await createOccurrence(tester, funcOccurrenceTitle, 'Esteira Transportadora 03');
 
@@ -257,8 +261,9 @@ void main() {
     expect(find.byTooltip('Remover'), findsNothing);
     await goBack(tester);
 
-    await tap(tester, find.text('Perfil').last);
+    await tap(tester, find.byTooltip('Perfil'));
     await waitFor(tester, find.text('Usuário: FUNC · Funcionário'));
-    await logoutFrom(tester, 'Perfil');
+    await tap(tester, find.text('Sair').last);
+    await waitFor(tester, find.text('Entrar'));
   });
 }
