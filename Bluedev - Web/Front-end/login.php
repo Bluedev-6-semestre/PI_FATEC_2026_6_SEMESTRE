@@ -1,34 +1,40 @@
 <?php
-session_start();
+require_once __DIR__ . '/includes/auth.php';
 
-$usuarios = [
-    'ADM'  => ['senha' => '1234', 'id' => 1],
-    'FUNC' => ['senha' => '123', 'id' => 2]
-];
-
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $usuario = strtoupper($_POST['usuario']); 
-    $senha   = $_POST['senha'];
-
-    if (isset($usuarios[$usuario]) && $usuarios[$usuario]['senha'] === $senha) {
-        $_SESSION['loggedin'] = true;
-        $_SESSION['usuario'] = $usuario;
-        $_SESSION['usuario_id'] = $usuarios[$usuario]['id'];
-
-        if ($usuario === "ADM") {
-            $_SESSION['tipo_usuario'] = 'ADM';
-            header("Location: inicial_adm.php");
-            exit();
-        } elseif ($usuario === "FUNC") {
-            $_SESSION['tipo_usuario'] = 'FUNC';
-            header("Location: inicial_func.php");
-            exit();
-        }
-    } else {
-        echo "Usuário ou senha inválidos.";
-    }
-} else {
-    header("Location: index.html");
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    header('Location: index.php');
     exit();
 }
-?>
+
+$usuario = trim($_POST['usuario'] ?? '');
+$senha = $_POST['senha'] ?? '';
+
+if ($usuario === '' || $senha === '') {
+    api_flash_error('Informe usuário e senha.');
+    header('Location: index.php');
+    exit();
+}
+
+try {
+    $resposta = api_request('POST', '/api/usuarios/login', [
+        'usuario' => $usuario,
+        'senha' => $senha,
+    ]);
+
+    if (!is_array($resposta) || empty($resposta['id']) || empty($resposta['tipoUsuario'])) {
+        throw new ApiException('A API retornou dados de autenticação incompletos.');
+    }
+
+    session_regenerate_id(true);
+    $_SESSION['loggedin'] = true;
+    $_SESSION['usuario_id'] = (int) $resposta['id'];
+    $_SESSION['usuario'] = (string) ($resposta['usuario'] ?? $usuario);
+    $_SESSION['tipo_usuario'] = normalize_api_role((string) $resposta['tipoUsuario']);
+
+    header('Location: ' . (is_admin() ? 'inicial_adm.php' : 'inicial_func.php'));
+    exit();
+} catch (Throwable $exception) {
+    api_flash_error(api_user_message($exception));
+    header('Location: index.php');
+    exit();
+}

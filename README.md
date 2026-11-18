@@ -128,6 +128,10 @@ PI_FATEC_2026_6_SEMESTRE/
 └── README.md
 ```
 
+## Integração do sistema Web
+
+O frontend PHP consome os microserviços exclusivamente pelo API Gateway. A configuração da variável `API_BASE_URL`, os endpoints utilizados, o tratamento de imagens e as limitações conhecidas estão documentados em [`Bluedev - Web/Front-end/README.md`](Bluedev%20-%20Web/Front-end/README.md).
+
 ## Instalação e Execução
 
 ### Pré-requisitos
