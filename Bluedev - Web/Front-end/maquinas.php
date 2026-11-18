@@ -1,19 +1,26 @@
 <?php
 require_once __DIR__ . '/auth.php';
-require_admin();
-require 'bd.php';
-
-$tipo_usuario = $_SESSION['tipo_usuario'] ?? ''; 
-$usuario_id   = $_SESSION['usuario_id'] ?? 0;
+$auth = auth_require_permission('ver_cadastros');
+$tipo_usuario = $auth['tipo'];
+$busca = isset($_GET['q']) && is_string($_GET['q']) ? trim($_GET['q']) : '';
+$statusFiltro = isset($_GET['status']) && is_string($_GET['status']) ? trim($_GET['status']) : '';
 
 try {
-    if ($tipo_usuario === 'ADM') {
-        $stmt = $pdo->prepare("SELECT * FROM maquinas ORDER BY id DESC");
-    } else {
-        $stmt = $pdo->prepare("SELECT * FROM maquinas WHERE usuario_id = :usuario_id ORDER BY id DESC");
-        $stmt->bindValue(':usuario_id', $usuario_id, PDO::PARAM_INT);
+    $where = [];
+    $params = [];
+    if ($busca !== '') {
+        $where[] = "(nome LIKE :q1 OR codigo LIKE :q2 OR modelo LIKE :q3 OR fabricante LIKE :q4)";
+        foreach (['q1', 'q2', 'q3', 'q4'] as $k) {
+            $params[':' . $k] = auth_like($busca);
+        }
     }
-    $stmt->execute();
+    if ($statusFiltro !== '') {
+        $where[] = "status_maquina = :status";
+        $params[':status'] = $statusFiltro;
+    }
+    $sql = "SELECT * FROM maquinas" . ($where ? ' WHERE ' . implode(' AND ', $where) : '') . " ORDER BY id DESC";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
     $maquinas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     die("Erro ao buscar máquinas: " . $e->getMessage());
@@ -26,34 +33,35 @@ try {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Página Máquinas</title>
 <link rel="stylesheet" href="style/style_base.css">
+<link rel="stylesheet" href="style/admin.css">
 </head>
 <body>
 <div class="navbar">
     <img src="../Imagens/logo_cliente.jpeg" alt="Logo Cliente" class="logo-cliente">
-    <a href="index.php" class="logout-icon">
+    <a href="logout.php" class="logout-icon">
         <img src="../Imagens/icone_sair.png" alt="Sair">
     </a>
 </div>
 
 <div class="container">
-    <aside class="sidebar">
-        <ul>
-            <li><a href="ocorrencias.php"><img src="../Imagens/ocorrencia_icone.png" alt="Ocorrências"> Ocorrências</a></li>
-            <?php if ($tipo_usuario === 'ADM'): ?>
-                <li><a href="fornecedores.php"><img src="../Imagens/fornecedor_icone.png" alt="Fornecedores"> Fornecedores</a></li>
-                <li><a href="funcionarios.php"><img src="../Imagens/func_icone.png" alt="Funcionários"> Funcionários</a></li>
-                <li><a href="maquinas.php" class="ativo"><img src="../Imagens/maquina_icone.png" alt="Máquinas"> Máquinas</a></li>
-            <?php endif; ?>
-            <li><a href="relatorios.php"><img src="../Imagens/relatorio_icone.png" alt="Relatórios"> Relatórios</a></li>
-        </ul>
-    </aside>
+    <?php $menuAtivo = 'maquinas'; include 'menu.php'; ?>
 
     <main class="main-content">
         <div class="titulo-pagina">
             <h2>MÁQUINAS</h2>
             <div class="botoes">
-                <button onclick="window.location.href='adicionar_maquinas.php'">ADICIONAR</button>
+                <form method="GET" class="busca-form">
+                    <input type="search" name="q" placeholder="Buscar..." value="<?= htmlspecialchars($busca) ?>" aria-label="Buscar">
+                    <select name="status" aria-label="Status">
+                        <option value="">Todos os status</option>
+                        <?php foreach (['ativa', 'inativa', 'em manutenção'] as $st): ?>
+                            <option value="<?= $st ?>" <?= $statusFiltro === $st ? 'selected' : '' ?>><?= ucfirst($st) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                    <button type="submit">BUSCAR</button>
+                </form>
                 <?php if ($tipo_usuario === 'ADM'): ?>
+                    <button onclick="window.location.href='adicionar_maquinas.php'" type="button">ADICIONAR</button>
                     <button id="btnRemover" type="button" class="btn-remover">REMOVER</button>
                 <?php endif; ?>
             </div>
@@ -75,9 +83,11 @@ try {
                                 <p><strong>Status:</strong> <?= htmlspecialchars($m['status_maquina']) ?></p>
                             </div>
                             <div class="acoes">
+                                <?php if ($tipo_usuario === 'ADM'): ?>
                                 <a href="adicionar_maquinas.php?id=<?= $m['id'] ?>">
                                     <img src="../Imagens/editar.png" alt="Editar">
                                 </a>
+                                <?php endif; ?>
                                 <a href="#"
                                    class="ver-mais"
                                    data-id="<?= $m['id'] ?>"
@@ -95,7 +105,7 @@ try {
                     <?php endforeach; ?>
                 <?php else: ?>
                     <div class="sem-fornecedores">
-                        <p>Nenhuma máquina cadastrada no momento.</p>
+                        <p><?= ($busca !== '' || $statusFiltro !== '') ? 'Nenhum resultado para a busca.' : 'Nenhuma máquina cadastrada no momento.' ?></p>
                         <img src="../Imagens/nada_encontrado4.png" alt="Sem máquinas">
                     </div>
                 <?php endif; ?>
@@ -116,7 +126,7 @@ try {
         <p><strong>Status:</strong> <span id="modalStatus"></span></p>
         <p><strong>Descrição:</strong> <span id="modalDescricao"></span></p>
         <div class="botoes-modal">
-            <button id="btnEditar" class="btn-editar">Editar</button>
+            <?php if ($tipo_usuario === 'ADM'): ?><button id="btnEditar" class="btn-editar">Editar</button><?php endif; ?>
             <button class="btn-fechar" onclick="fecharModal()">Fechar</button>
         </div>
     </div>
@@ -136,7 +146,7 @@ function abrirModal(m) {
     document.getElementById('modalDataAquisicao').textContent = m.data_aquisicao;
     document.getElementById('modalStatus').textContent = m.status_maquina;
     document.getElementById('modalDescricao').textContent = m.descricao;
-    btnEditar.onclick = () => window.location.href = `adicionar_maquinas.php?id=${m.id}`;
+    if (btnEditar) btnEditar.onclick = () => window.location.href = `adicionar_maquinas.php?id=${m.id}`;
     modal.style.display = 'flex';
 }
 

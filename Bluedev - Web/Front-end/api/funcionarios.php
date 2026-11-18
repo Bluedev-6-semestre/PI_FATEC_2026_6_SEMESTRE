@@ -10,24 +10,24 @@ $usuario = api_require_login();
 require_once dirname(__DIR__) . '/bd.php';
 
 if ($method === 'GET') {
-    if ($usuario['tipo'] === 'ADM') {
-        $stmt = $pdo->query(
-            'SELECT id, nome, idade, funcao, usuario_id, created_at '
-            . 'FROM funcionarios ORDER BY id DESC'
-        );
-    } else {
-        $stmt = $pdo->prepare(
-            'SELECT id, nome, idade, funcao, usuario_id, created_at '
-            . 'FROM funcionarios WHERE usuario_id = :usuario_id ORDER BY id DESC'
-        );
-        $stmt->execute([':usuario_id' => $usuario['id']]);
+    if (!auth_can('ver_cadastros', $usuario)) {
+        api_respond(['erro' => 'Você não tem permissão para consultar funcionários.'], 403);
     }
+    $params = [];
+    $conds = [];
+    $busca = api_busca(['nome', 'funcao'], $params);
+    if ($busca !== '') {
+        $conds[] = $busca;
+    }
+    $sql = 'SELECT id, nome, idade, funcao, usuario_id, created_at FROM funcionarios'
+        . ($conds ? ' WHERE ' . implode(' AND ', $conds) : '') . ' ORDER BY id DESC';
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
     api_respond($stmt->fetchAll(PDO::FETCH_ASSOC));
 }
 
-if ($usuario['tipo'] !== 'ADM') {
-    api_respond(['erro' => 'Somente administradores podem alterar funcionários.'], 403);
-}
+// Cadastro, edição e exclusão: somente administradores.
+api_require_admin();
 
 if ($method === 'POST' || $method === 'PUT') {
     $body = api_read_json();

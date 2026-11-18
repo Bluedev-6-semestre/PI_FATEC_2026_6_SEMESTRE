@@ -11,34 +11,39 @@ require_once dirname(__DIR__) . '/bd.php';
 
 if ($method === 'GET') {
     $details = isset($_GET['detalhes']) && $_GET['detalhes'] === '1';
-    if (!$details) {
-        if ($usuario['tipo'] === 'ADM') {
-            $stmt = $pdo->query('SELECT id, nome FROM maquinas ORDER BY nome');
-        } else {
-            $stmt = $pdo->prepare(
-                'SELECT id, nome FROM maquinas WHERE usuario_id = :usuario_id ORDER BY nome'
-            );
-            $stmt->execute([':usuario_id' => $usuario['id']]);
-        }
-    } else {
-        $sql = 'SELECT id, nome, codigo, modelo, fabricante, numero_serie, '
-            . 'data_aquisicao, localizacao, status_maquina, descricao FROM maquinas';
-        if ($usuario['tipo'] === 'ADM') {
-            $sql .= ' ORDER BY id DESC';
-            $stmt = $pdo->query($sql);
-        } else {
-            $sql .= ' WHERE usuario_id = :usuario_id ORDER BY id DESC';
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([':usuario_id' => $usuario['id']]);
-        }
+    // A lista simples (id + nome) também serve para vincular ocorrências.
+    $podeLista = auth_can('ver_cadastros', $usuario) || auth_can('registrar_ocorrencias', $usuario)
+        || auth_can('gerenciar_ocorrencias', $usuario);
+    if (($details && !auth_can('ver_cadastros', $usuario)) || (!$details && !$podeLista)) {
+        api_respond(['erro' => 'Você não tem permissão para consultar máquinas.'], 403);
     }
+    $params = [];
+    $conds = [];
+    if ($details) {
+        $busca = api_busca(['nome', 'codigo', 'modelo', 'fabricante', 'localizacao'], $params);
+        if ($busca !== '') {
+            $conds[] = $busca;
+        }
+        $status = isset($_GET['status']) && is_string($_GET['status']) ? trim($_GET['status']) : '';
+        if ($status !== '') {
+            $conds[] = 'status_maquina = :status';
+            $params[':status'] = $status;
+        }
+        $sql = 'SELECT id, nome, codigo, modelo, fabricante, numero_serie, '
+            . 'data_aquisicao, localizacao, status_maquina, descricao FROM maquinas'
+            . ($conds ? ' WHERE ' . implode(' AND ', $conds) : '') . ' ORDER BY id DESC';
+    } else {
+        $sql = 'SELECT id, nome FROM maquinas ORDER BY nome';
+    }
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
     api_respond($stmt->fetchAll(PDO::FETCH_ASSOC));
 }
 
+// Cadastro, edição e exclusão: somente administradores.
+api_require_admin();
+
 if ($method === 'POST' || $method === 'PUT') {
-    if ($usuario['tipo'] !== 'ADM') {
-        api_respond(['erro' => 'Somente administradores podem cadastrar ou alterar máquinas.'], 403);
-    }
     $body = api_read_json();
     $nomeValue = isset($body['nome']) ? $body['nome'] : '';
     $codigoValue = isset($body['codigo']) ? $body['codigo'] : '';
@@ -119,16 +124,10 @@ if ($method === 'POST' || $method === 'PUT') {
         api_respond(['erro' => 'Identificador de máquina inválido.'], 400);
     }
     $where = 'id = :id';
-    if ($usuario['tipo'] !== 'ADM') {
-        $where .= ' AND usuario_id = :usuario_id';
-        $values[':usuario_id'] = $usuario['id'];
-    }
-    $check = $pdo->prepare('SELECT id FROM maquinas WHERE ' . $where);
-    $check->execute([':id' => $id] + (
-        $usuario['tipo'] === 'ADM' ? [] : [':usuario_id' => $usuario['id']]
-    ));
+    $check = $pdo->prepare('SELECT id FROM maquinas WHERE id = :id');
+    $check->execute([':id' => $id]);
     if (!$check->fetch(PDO::FETCH_ASSOC)) {
-        api_respond(['erro' => 'Máquina não encontrada ou sem permissão de acesso.'], 404);
+        api_respond(['erro' => 'Máquina não encontrada.'], 404);
     }
 
     $values[':id'] = $id;
@@ -142,9 +141,6 @@ if ($method === 'POST' || $method === 'PUT') {
 }
 
 if ($method === 'DELETE') {
-    if ($usuario['tipo'] !== 'ADM') {
-        api_respond(['erro' => 'Somente administradores podem excluir máquinas.'], 403);
-    }
     $id = filter_var(isset($_GET['id']) ? $_GET['id'] : null, FILTER_VALIDATE_INT);
     if (!$id || $id < 1) {
         api_respond(['erro' => 'Identificador de máquina inválido.'], 400);

@@ -1,36 +1,76 @@
 <?php
 require_once __DIR__ . '/auth.php';
-require_login();
-require 'bd.php';
+$auth = auth_require_login();
+$tipo_usuario = $auth['tipo'];
+$usuario_id   = $auth['id'];
+$podeRegistrar = auth_can('registrar_ocorrencias', $auth);
+$podeAtualizarProprias = auth_can('gerenciar_ocorrencias', $auth);
 
-$tipo_usuario = $_SESSION['tipo_usuario'] ?? ''; 
-$usuario_id   = $_SESSION['usuario_id'] ?? 0;
-$statusFiltro = $_GET['status'] ?? '';
+$statusFiltro = isset($_GET['status']) && is_string($_GET['status']) ? trim($_GET['status']) : '';
+$tipoFiltro   = isset($_GET['tipo']) && is_string($_GET['tipo']) ? trim($_GET['tipo']) : '';
+$maquinaFiltro = isset($_GET['maquina_id']) && $_GET['maquina_id'] !== '' ? (int) $_GET['maquina_id'] : 0;
+$usuarioFiltro = isset($_GET['usuario_id']) && $_GET['usuario_id'] !== '' ? (int) $_GET['usuario_id'] : 0;
+$busca = isset($_GET['q']) && is_string($_GET['q']) ? trim($_GET['q']) : '';
 
 try {
-    if ($tipo_usuario === 'ADM') {
-        if (!empty($statusFiltro)) {
-            $stmt = $pdo->prepare("SELECT o.*, m.nome AS nome_maquina FROM ocorrencias o LEFT JOIN maquinas m ON o.maquina_id = m.id WHERE o.status = :status ORDER BY o.id DESC");
-            $stmt->bindValue(':status', $statusFiltro);
+    $where = [];
+    $params = [];
+
+    // Administrador vê todas as ocorrências; funcionário, apenas as próprias.
+    if ($tipo_usuario !== 'ADM') {
+        $where[] = "o.usuario_id = :usuario_id";
+        $params[':usuario_id'] = $usuario_id;
+    } elseif ($usuarioFiltro > 0) {
+        $where[] = "o.usuario_id = :filtro_usuario";
+        $params[':filtro_usuario'] = $usuarioFiltro;
+    }
+    if ($statusFiltro !== '') {
+        if ($statusFiltro === 'Concluído' || $statusFiltro === 'Concluída') {
+            $where[] = "o.status IN ('Concluída', 'Concluído')";
         } else {
-            $stmt = $pdo->prepare("SELECT o.*, m.nome AS nome_maquina FROM ocorrencias o LEFT JOIN maquinas m ON o.maquina_id = m.id ORDER BY o.id DESC");
+            $where[] = "o.status = :status";
+            $params[':status'] = $statusFiltro;
         }
-    } else {
-        if (!empty($statusFiltro)) {
-            $stmt = $pdo->prepare("SELECT o.*, m.nome AS nome_maquina FROM ocorrencias o LEFT JOIN maquinas m ON o.maquina_id = m.id WHERE o.usuario_id = :usuario_id AND o.status = :status ORDER BY o.id DESC");
-            $stmt->bindValue(':usuario_id', $usuario_id);
-            $stmt->bindValue(':status', $statusFiltro);
-        } else {
-            $stmt = $pdo->prepare("SELECT o.*, m.nome AS nome_maquina FROM ocorrencias o LEFT JOIN maquinas m ON o.maquina_id = m.id WHERE o.usuario_id = :usuario_id ORDER BY o.id DESC");
-            $stmt->bindValue(':usuario_id', $usuario_id);
+    }
+    if ($tipoFiltro !== '') {
+        $where[] = "o.tipo = :tipo";
+        $params[':tipo'] = $tipoFiltro;
+    }
+    if ($maquinaFiltro > 0) {
+        $where[] = "o.maquina_id = :maquina";
+        $params[':maquina'] = $maquinaFiltro;
+    }
+    if ($busca !== '') {
+        $where[] = "(o.titulo LIKE :q1 OR o.descricao LIKE :q2 OR m.nome LIKE :q3 OR u.usuario LIKE :q4)";
+        foreach (['q1', 'q2', 'q3', 'q4'] as $k) {
+            $params[':' . $k] = auth_like($busca);
         }
     }
 
-    $stmt->execute();
+    $sql = "SELECT o.*, m.nome AS nome_maquina, u.usuario AS nome_usuario
+            FROM ocorrencias o
+            LEFT JOIN maquinas m ON o.maquina_id = m.id
+            LEFT JOIN usuarios u ON o.usuario_id = u.id"
+        . ($where ? " WHERE " . implode(" AND ", $where) : "")
+        . " ORDER BY o.id DESC";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
     $ocorrencias = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+    // Opções dos filtros do administrador.
+    $listaMaquinas = $pdo->query("SELECT id, nome FROM maquinas ORDER BY nome")->fetchAll(PDO::FETCH_ASSOC);
+    $listaUsuarios = $tipo_usuario === 'ADM'
+        ? $pdo->query("SELECT id, usuario FROM usuarios ORDER BY usuario")->fetchAll(PDO::FETCH_ASSOC)
+        : [];
 } catch (PDOException $e) {
     die("Erro ao buscar ocorrências: " . $e->getMessage());
+}
+
+// Pode editar: administrador (todas) ou o dono, se tiver permissão de atualizar.
+function pode_editar_ocorrencia($oc, $tipo_usuario, $usuario_id, $podeAtualizarProprias)
+{
+    return $tipo_usuario === 'ADM'
+        || ($podeAtualizarProprias && (int) $oc['usuario_id'] === (int) $usuario_id);
 }
 ?>
 <!DOCTYPE html>
@@ -40,26 +80,17 @@ try {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Página Ocorrências</title>
 <link rel="stylesheet" href="style/style_base.css">
+<link rel="stylesheet" href="style/admin.css">
 </head>
 <body>
 
 <div class="navbar">
     <img src="../Imagens/logo_cliente.jpeg" class="logo-cliente">
-    <a href="index.php" class="logout-icon"><img src="../Imagens/icone_sair.png"></a>
+    <a href="logout.php" class="logout-icon"><img src="../Imagens/icone_sair.png"></a>
 </div>
 
 <div class="container">
-    <aside class="sidebar">
-        <ul>
-            <li><a href="ocorrencias.php"><img src="../Imagens/ocorrencia_icone.png"> Ocorrências</a></li>
-            <?php if ($tipo_usuario === 'ADM'): ?>
-                <li><a href="fornecedores.php"><img src="../Imagens/fornecedor_icone.png"> Fornecedores</a></li>
-                <li><a href="funcionarios.php"><img src="../Imagens/func_icone.png"> Funcionários</a></li>
-                <li><a href="maquinas.php"><img src="../Imagens/maquina_icone.png"> Máquinas</a></li>
-            <?php endif; ?>
-            <li><a href="relatorios.php"><img src="../Imagens/relatorio_icone.png"> Relatórios</a></li>
-        </ul>
-    </aside>
+    <?php $menuAtivo = 'ocorrencias'; include 'menu.php'; ?>
 
     <main class="main-content">
 
@@ -68,21 +99,60 @@ try {
 
             <div class="botoes">
 
+                <form method="GET" class="busca-form">
+                    <input type="search" name="q" placeholder="Buscar..." value="<?= htmlspecialchars($busca) ?>" aria-label="Buscar">
+                    <input type="hidden" name="status" value="<?= htmlspecialchars($statusFiltro) ?>">
+                    <input type="hidden" name="tipo" value="<?= htmlspecialchars($tipoFiltro) ?>">
+                    <input type="hidden" name="maquina_id" value="<?= $maquinaFiltro ?: '' ?>">
+                    <input type="hidden" name="usuario_id" value="<?= $usuarioFiltro ?: '' ?>">
+                    <button type="submit">BUSCAR</button>
+                </form>
+
                 <div class="filtro-container">
                     <img src="../Imagens/filtro.png" class="icone-filtro" id="abrirFiltro">
-                    <div class="menu-filtro" id="menuFiltro">
+                    <div class="menu-filtro menu-filtro-largo" id="menuFiltro">
                         <form method="GET">
-                            <select name="status" onchange="this.form.submit()">
+                            <input type="hidden" name="q" value="<?= htmlspecialchars($busca) ?>">
+                            <label>Status</label>
+                            <select name="status">
                                 <option value="">Todos</option>
                                 <option value="Pendente" <?= ($statusFiltro === 'Pendente' ? 'selected' : '') ?>>Pendente</option>
                                 <option value="Em andamento" <?= ($statusFiltro === 'Em andamento' ? 'selected' : '') ?>>Em andamento</option>
-                                <option value="Concluído" <?= ($statusFiltro === 'Concluído' ? 'selected' : '') ?>>Concluído</option>
+                                <option value="Concluído" <?= (in_array($statusFiltro, ['Concluído', 'Concluída'], true) ? 'selected' : '') ?>>Concluído</option>
                             </select>
+                            <label>Tipo</label>
+                            <select name="tipo">
+                                <option value="">Todos</option>
+                                <option value="Preventiva" <?= ($tipoFiltro === 'Preventiva' ? 'selected' : '') ?>>Preventiva</option>
+                                <option value="Corretiva" <?= ($tipoFiltro === 'Corretiva' ? 'selected' : '') ?>>Corretiva</option>
+                            </select>
+                            <label>Máquina</label>
+                            <select name="maquina_id">
+                                <option value="">Todas</option>
+                                <?php foreach ($listaMaquinas as $mq): ?>
+                                    <option value="<?= $mq['id'] ?>" <?= $maquinaFiltro === (int) $mq['id'] ? 'selected' : '' ?>><?= htmlspecialchars($mq['nome']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                            <?php if ($tipo_usuario === 'ADM'): ?>
+                                <label>Registrada por</label>
+                                <select name="usuario_id">
+                                    <option value="">Todos</option>
+                                    <?php foreach ($listaUsuarios as $us): ?>
+                                        <option value="<?= $us['id'] ?>" <?= $usuarioFiltro === (int) $us['id'] ? 'selected' : '' ?>><?= htmlspecialchars($us['usuario']) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            <?php endif; ?>
+                            <div class="menu-filtro-acoes">
+                                <button type="submit">Filtrar</button>
+                                <a href="ocorrencias.php">Limpar</a>
+                            </div>
                         </form>
                     </div>
                 </div>
 
-                <button onclick="window.location.href='adicionar_ocorrencia.php'">ADICIONAR</button>
+                <?php if ($podeRegistrar): ?>
+                    <button onclick="window.location.href='adicionar_ocorrencia.php'" type="button">ADICIONAR</button>
+                <?php endif; ?>
 
                 <?php if ($tipo_usuario === 'ADM'): ?>
                     <button id="btnRemover" class="btn-remover" type="button">REMOVER</button>
@@ -117,6 +187,9 @@ try {
                                 <p><strong>Tipo:</strong> <?= htmlspecialchars($oc['tipo']) ?></p>
                                 <p><strong>Status:</strong> <?= htmlspecialchars($oc['status']) ?></p>
                                 <p><strong>Máquina:</strong> <?= htmlspecialchars($oc['nome_maquina'] ?? '—') ?></p>
+                                <?php if ($tipo_usuario === 'ADM'): ?>
+                                    <p><strong>Registrada por:</strong> <?= htmlspecialchars($oc['nome_usuario'] ?? '—') ?></p>
+                                <?php endif; ?>
 
                                 <?php if (!empty($oc['descricao'])): ?>
                                     <div class="descricao">
@@ -127,12 +200,16 @@ try {
                             </div>
 
                             <div class="acoes">
+                                <?php $editavel = pode_editar_ocorrencia($oc, $tipo_usuario, $usuario_id, $podeAtualizarProprias); ?>
+                                <?php if ($editavel): ?>
                                 <a href="adicionar_ocorrencia.php?id=<?= $oc['id'] ?>">
                                     <img src="../Imagens/editar.png">
                                 </a>
+                                <?php endif; ?>
 
                                 <a href="#" class="ver-mais"
                                    data-id="<?= $oc['id'] ?>"
+                                   data-editavel="<?= $editavel ? '1' : '0' ?>"
                                    data-titulo="<?= htmlspecialchars($oc['titulo'], ENT_QUOTES) ?>"
                                    data-tipo="<?= htmlspecialchars($oc['tipo'], ENT_QUOTES) ?>"
                                    data-status="<?= htmlspecialchars($oc['status'], ENT_QUOTES) ?>"
@@ -202,7 +279,13 @@ function abrirModal(oc) {
     document.getElementById('modalTitulo').textContent = oc.titulo;
     document.getElementById('modalTipo').textContent = oc.tipo;
     document.getElementById('modalStatus').textContent = oc.status;
-    document.getElementById('modalDescricao').innerHTML = oc.descricao ? `<strong>Descrição:</strong><br>${oc.descricao}` : '';
+    const desc = document.getElementById('modalDescricao');
+    desc.textContent = '';
+    if (oc.descricao) {
+        const rotulo = document.createElement('strong');
+        rotulo.textContent = 'Descrição:';
+        desc.append(rotulo, document.createElement('br'), document.createTextNode(oc.descricao));
+    }
 
     const img = document.getElementById('modalImagem');
     if (oc.imagem) {
@@ -212,6 +295,7 @@ function abrirModal(oc) {
         img.style.display = 'none';
     }
 
+    btnEditar.style.display = oc.editavel ? '' : 'none';
     btnEditar.onclick = () => window.location.href = `adicionar_ocorrencia.php?id=${oc.id}`;
     modal.style.display = 'flex';
 }
@@ -221,6 +305,7 @@ document.querySelectorAll('.ver-mais').forEach(btn => {
         e.preventDefault();
         abrirModal({
             id: btn.dataset.id,
+            editavel: btn.dataset.editavel === '1',
             titulo: btn.dataset.titulo,
             tipo: btn.dataset.tipo,
             status: btn.dataset.status,

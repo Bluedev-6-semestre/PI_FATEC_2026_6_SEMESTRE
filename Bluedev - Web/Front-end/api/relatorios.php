@@ -6,7 +6,7 @@ if ($method !== 'GET') {
     api_respond(['erro' => 'Método não permitido.'], 405);
 }
 
-$usuario = api_require_login();
+$usuario = api_require_permission('ver_relatorios', 'Você não tem permissão para consultar relatórios.');
 require_once dirname(__DIR__) . '/bd.php';
 
 $today = date('Y-m-d');

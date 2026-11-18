@@ -66,6 +66,23 @@ flowchart TD
     Occurrence --> Database
 ```
 
+## Backoffice Web — Perfis, Usuários e Permissões
+
+O backoffice (PHP) separa o que cada perfil pode fazer. As regras valem tanto nas páginas quanto nas APIs (`Bluedev - Web/Front-end/api/`), e o usuário é relido do banco a cada requisição (desativar uma conta ou mudar permissões vale na hora).
+
+| Perfil | O que pode fazer |
+|---|---|
+| **Funcionário (Mobile)** | Visualizar funcionários, máquinas e fornecedores; consultar, pesquisar e filtrar; registrar ocorrências; acompanhar e atualizar **as próprias** ocorrências (conforme as permissões definidas). |
+| **Administrador (Backoffice)** | Cadastrar, editar e excluir funcionários, máquinas e fornecedores; criar e gerenciar usuários; definir permissões e níveis de acesso; pesquisar e filtrar todos os registros; consultar, gerenciar e administrar **todas** as ocorrências. |
+
+**Login:** usuário e senha vêm da tabela `usuarios` (senha com hash). Os usuários iniciais `ADM` / `FUNC` continuam sendo criados na primeira execução. Contas inativas não entram.
+
+**Permissões do funcionário** (definidas na tela *Usuários*): `ver_cadastros`, `registrar_ocorrencias`, `gerenciar_ocorrencias` (apenas as próprias) e `ver_relatorios`. O administrador tem acesso total.
+
+**Gerenciamento de usuários** (`/usuarios.php` e `/api/usuarios.php`, somente ADM): criar, editar, ativar/desativar, trocar senha, definir perfil e permissões, vincular a um funcionário. Proteções: não é possível rebaixar/desativar/excluir a própria conta, nem remover o último administrador ativo; usuários com registros só podem ser desativados.
+
+**Busca e filtros:** funcionários, máquinas, fornecedores, usuários e ocorrências aceitam busca por texto (`q`); ocorrências também filtram por status, tipo, máquina e autor; máquinas por status; usuários por perfil e situação.
+
 ## Tecnologias Utilizadas
 
 ### Backend

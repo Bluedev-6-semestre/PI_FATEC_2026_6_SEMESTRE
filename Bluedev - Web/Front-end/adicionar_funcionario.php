@@ -1,16 +1,10 @@
 <?php
 require_once __DIR__ . '/auth.php';
-require_admin();
-require 'bd.php';
+$auth = auth_require_admin();
+$usuario_id = $auth['id'];
+$tipo_usuario = $auth['tipo'];
 
-$tipo_usuario = $_SESSION['tipo_usuario'] ?? '';
-$usuario_id   = $_SESSION['usuario_id'] ?? 0;
-
-if ($tipo_usuario !== 'ADM') {
-    die("Acesso negado.");
-}
-
-$id = $_GET['id'] ?? null;
+$id = isset($_GET['id']) ? (int) $_GET['id'] : null;
 $modo = $id ? 'editar' : 'adicionar';
 
 $dados = [
@@ -38,8 +32,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $idade = trim($_POST['idade'] ?? '');
     $funcao = trim($_POST['funcao'] ?? '');
 
-    if (empty($nome) || empty($idade) || empty($funcao)) {
+    if ($nome === '' || $idade === '' || $funcao === '') {
         $erro = "Todos os campos são obrigatórios.";
+    } elseif (!ctype_digit($idade) || (int) $idade > 150) {
+        $erro = "Informe uma idade válida.";
+    } elseif (mb_strlen($nome) > 255 || mb_strlen($funcao) > 100) {
+        $erro = "Nome ou função muito longos.";
     } else {
         try {
             if ($id) {
@@ -78,11 +76,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title><?= ucfirst($modo) ?> Funcionário</title>
 <link rel="stylesheet" href="style/style_base.css">
+    <link rel="stylesheet" href="style/admin.css">
 </head>
 <body>
     <div class="navbar">
         <img src="../Imagens/logo_cliente.jpeg" alt="Logo Cliente" class="logo-cliente">
-        <a href="index.php" class="logout-icon">
+        <a href="logout.php" class="logout-icon">
             <img src="../Imagens/icone_sair.png" alt="Sair">
         </a>
         <a href="funcionarios.php" class="voltar-icon">
@@ -91,15 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 
     <div class="container">
-        <aside class="sidebar">
-            <ul>
-                <li><a href="ocorrencias.php"><img src="../Imagens/ocorrencia_icone.png" alt="Ocorrências"> Ocorrências</a></li>
-                <li><a href="fornecedores.php"><img src="../Imagens/fornecedor_icone.png" alt="Fornecedores"> Fornecedores</a></li>
-                <li><a href="funcionarios.php" class="ativo"><img src="../Imagens/func_icone.png" alt="Funcionários"> Funcionários</a></li>
-                <li><a href="maquinas.php"><img src="../Imagens/maquina_icone.png" alt="Máquinas"> Máquinas</a></li>
-                <li><a href="relatorios.php"><img src="../Imagens/relatorio_icone.png" alt="Relatórios"> Relatórios</a></li>
-            </ul>
-        </aside>
+        <?php $menuAtivo = 'funcionarios'; include 'menu.php'; ?>
 
         <main class="main-content">
             <div class="titulo-pagina">

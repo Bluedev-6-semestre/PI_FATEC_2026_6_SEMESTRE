@@ -1,10 +1,8 @@
 <?php
 require_once __DIR__ . '/auth.php';
-require_login();
-require 'bd.php';
-
-$tipo_usuario = $_SESSION['tipo_usuario'] ?? ''; 
-$usuario_id   = $_SESSION['usuario_id'] ?? 0;
+$auth = auth_require_permission('ver_relatorios');
+$tipo_usuario = $auth['tipo'];
+$usuario_id   = $auth['id'];
 
 // Filtros
 $busca = $_GET['busca'] ?? '';
@@ -219,21 +217,11 @@ window.addEventListener('resize', drawCharts);
 <body>
 <div class="navbar">
     <img src="../Imagens/logo_cliente.jpeg" alt="Logo Cliente" class="logo-cliente">
-    <a href="index.php" class="logout-icon"><img src="../Imagens/icone_sair.png" alt="Sair"></a>
+    <a href="logout.php" class="logout-icon"><img src="../Imagens/icone_sair.png" alt="Sair"></a>
 </div>
 
 <div class="container">
-    <aside class="sidebar">
-        <ul>
-            <li><a href="ocorrencias.php"><img src="../Imagens/ocorrencia_icone.png" alt="Ocorrências"> Ocorrências</a></li>
-            <?php if ($tipo_usuario === 'ADM'): ?>
-                <li><a href="fornecedores.php"><img src="../Imagens/fornecedor_icone.png" alt="Fornecedores"> Fornecedores</a></li>
-                <li><a href="funcionarios.php"><img src="../Imagens/func_icone.png" alt="Funcionários"> Funcionários</a></li>
-                <li><a href="maquinas.php"><img src="../Imagens/maquina_icone.png" alt="Máquinas"> Máquinas</a></li>
-            <?php endif; ?>
-            <li><a href="relatorios.php" class="ativo"><img src="../Imagens/relatorio_icone.png" alt="Relatórios"> Relatórios</a></li>
-        </ul>
-    </aside>
+    <?php $menuAtivo = 'relatorios'; include 'menu.php'; ?>
 
     <main class="main-content">
         <div class="titulo-pagina">

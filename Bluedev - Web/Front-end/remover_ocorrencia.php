@@ -1,13 +1,16 @@
 <?php
 require_once __DIR__ . '/auth.php';
-require_admin();
-require 'bd.php';
+auth_require_admin();
+auth_require_post();
 
-if (empty($_POST['ocorrencias'])) {
+if (empty($_POST['ocorrencias']) || !is_array($_POST['ocorrencias'])) {
     die("ID da ocorrência não informado.");
 }
 
-$ids = array_map('intval', $_POST['ocorrencias']);
+$ids = array_values(array_filter(array_map('intval', $_POST['ocorrencias']), fn($v) => $v > 0));
+if (!$ids) {
+    die("ID da ocorrência não informado.");
+}
 
 try {
     $placeholders = implode(',', array_fill(0, count($ids), '?'));

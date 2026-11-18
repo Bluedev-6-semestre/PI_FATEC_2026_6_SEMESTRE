@@ -7,26 +7,22 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $data = api_read_json();
 $usuarioValue = isset($data['usuario']) ? $data['usuario'] : '';
-$usuario = is_string($usuarioValue) ? strtoupper(trim($usuarioValue)) : '';
+$usuario = is_string($usuarioValue) ? trim($usuarioValue) : '';
 $senha = isset($data['senha']) && is_string($data['senha']) ? $data['senha'] : '';
-$usuarios = [
-    'ADM' => ['senha' => '1234', 'id' => 1],
-    'FUNC' => ['senha' => '123', 'id' => 2]
-];
 
-if (!isset($usuarios[$usuario]) || $usuarios[$usuario]['senha'] !== $senha) {
+// Autenticação real: usuário e senha (hash) vêm da tabela usuarios.
+$row = auth_autenticar($usuario, $senha);
+if ($row === null) {
     api_respond(['erro' => 'Usuário ou senha inválidos.'], 401);
 }
 
-session_start();
-session_regenerate_id(true);
-$_SESSION['loggedin'] = true;
-$_SESSION['usuario'] = $usuario;
-$_SESSION['usuario_id'] = $usuarios[$usuario]['id'];
-$_SESSION['tipo_usuario'] = $usuario;
+$tipo = auth_iniciar_sessao($row);
+$user = auth_user();
 
 api_respond([
-    'usuario' => $usuario,
-    'usuario_id' => $usuarios[$usuario]['id'],
-    'tipo_usuario' => $usuario
+    'usuario' => $row['usuario'],
+    'usuario_id' => (int) $row['id'],
+    'tipo_usuario' => $tipo,
+    'nome' => $user['nome'],
+    'permissoes' => $user['permissoes']
 ]);
