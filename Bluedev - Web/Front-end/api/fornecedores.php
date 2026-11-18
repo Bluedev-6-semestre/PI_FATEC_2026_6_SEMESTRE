@@ -46,6 +46,7 @@ function api_format_cnpj($cnpj)
 
 if ($method === 'GET') {
     if (isset($_GET['consultar_cnpj'])) {
+        api_require_admin();
         $cnpj = preg_replace('/\D+/', '', (string) $_GET['consultar_cnpj']);
         if (!api_cnpj_digits_valid($cnpj)) {
             api_respond(['erro' => 'Digite um CNPJ válido com 14 números.'], 422);
@@ -104,25 +105,26 @@ if ($method === 'GET') {
         ]);
     }
 
-    if ($usuario['tipo'] === 'ADM') {
-        $stmt = $pdo->query(
-            'SELECT id, nome, cnpj, categoria, telefone, endereco, usuario_id '
-            . 'FROM fornecedores ORDER BY id DESC'
-        );
-    } else {
-        $stmt = $pdo->prepare(
-            'SELECT id, nome, cnpj, categoria, telefone, endereco, usuario_id '
-            . 'FROM fornecedores WHERE usuario_id = :usuario_id ORDER BY id DESC'
-        );
-        $stmt->execute([':usuario_id' => $usuario['id']]);
+    if (!auth_can('ver_cadastros', $usuario)) {
+        api_respond(['erro' => 'Você não tem permissão para consultar fornecedores.'], 403);
     }
+    $params = [];
+    $conds = [];
+    $busca = api_busca(['nome', 'cnpj', 'categoria', 'telefone', 'endereco'], $params);
+    if ($busca !== '') {
+        $conds[] = $busca;
+    }
+    $sql = 'SELECT id, nome, cnpj, categoria, telefone, endereco, usuario_id FROM fornecedores'
+        . ($conds ? ' WHERE ' . implode(' AND ', $conds) : '') . ' ORDER BY id DESC';
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
     api_respond($stmt->fetchAll(PDO::FETCH_ASSOC));
 }
 
+// Cadastro, edição e exclusão: somente administradores.
+api_require_admin();
+
 if ($method === 'POST' || $method === 'PUT') {
-    if ($usuario['tipo'] !== 'ADM') {
-        api_respond(['erro' => 'Somente administradores podem cadastrar ou alterar fornecedores.'], 403);
-    }
     $body = api_read_json();
     $nameValue = isset($body['nome']) ? $body['nome'] : '';
     $cnpjValue = isset($body['cnpj']) ? $body['cnpj'] : '';
@@ -174,28 +176,21 @@ if ($method === 'POST' || $method === 'PUT') {
     if (!$id || $id < 1) {
         api_respond(['erro' => 'Identificador de fornecedor inválido.'], 400);
     }
-    $check = $pdo->prepare(
-        'SELECT id FROM fornecedores WHERE id = :id AND usuario_id = :usuario_id'
-    );
-    $check->execute([':id' => $id, ':usuario_id' => $usuario['id']]);
+    $check = $pdo->prepare('SELECT id FROM fornecedores WHERE id = :id');
+    $check->execute([':id' => $id]);
     if (!$check->fetch(PDO::FETCH_ASSOC)) {
-        api_respond(['erro' => 'Fornecedor não encontrado ou sem permissão de acesso.'], 404);
+        api_respond(['erro' => 'Fornecedor não encontrado.'], 404);
     }
     $values[':id'] = $id;
-    $values[':usuario_id'] = $usuario['id'];
     $stmt = $pdo->prepare(
         'UPDATE fornecedores SET nome = :nome, cnpj = :cnpj, categoria = :categoria, '
-        . 'telefone = :telefone, endereco = :endereco '
-        . 'WHERE id = :id AND usuario_id = :usuario_id'
+        . 'telefone = :telefone, endereco = :endereco WHERE id = :id'
     );
     $stmt->execute($values);
     api_respond(['mensagem' => 'Fornecedor atualizado.']);
 }
 
 if ($method === 'DELETE') {
-    if ($usuario['tipo'] !== 'ADM') {
-        api_respond(['erro' => 'Somente administradores podem excluir fornecedores.'], 403);
-    }
     $id = filter_var(isset($_GET['id']) ? $_GET['id'] : null, FILTER_VALIDATE_INT);
     if (!$id || $id < 1) {
         api_respond(['erro' => 'Identificador de fornecedor inválido.'], 400);

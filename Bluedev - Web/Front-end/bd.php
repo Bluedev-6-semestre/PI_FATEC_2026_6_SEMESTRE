@@ -17,19 +17,49 @@ try {
         senha VARCHAR(255) NOT NULL
     )");
 
+    // Evolução da tabela de usuários (gerenciamento real de usuários e permissões).
+    // 'tipo_usuario' é o mesmo campo usado pelo user-service (ADMIN / FUNCIONARIO).
+    $colunasUsuarios = [
+        'tipo_usuario'   => "VARCHAR(20) NOT NULL DEFAULT 'FUNCIONARIO'",
+        'nome'           => 'VARCHAR(100) NULL',
+        'ativo'          => 'TINYINT(1) NOT NULL DEFAULT 1',
+        'permissoes'     => 'TEXT NULL',
+        'funcionario_id' => 'INT NULL',
+        'created_at'     => 'TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP'
+    ];
+    $stmt = $pdo->prepare(
+        "SELECT COLUMN_NAME FROM information_schema.COLUMNS
+         WHERE TABLE_SCHEMA = :dbname AND TABLE_NAME = 'usuarios'"
+    );
+    $stmt->execute(['dbname' => $dbname]);
+    $existentes = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    foreach ($colunasUsuarios as $coluna => $definicao) {
+        if (!in_array($coluna, $existentes, true)) {
+            $pdo->exec("ALTER TABLE usuarios ADD COLUMN $coluna $definicao");
+            if ($coluna === 'tipo_usuario') {
+                $pdo->exec("UPDATE usuarios SET tipo_usuario = 'ADMIN' WHERE usuario = 'ADM'");
+            }
+        }
+    }
+
+    // Usuários iniciais (somente criados se ainda não existirem).
     $usuarios = [
-        ['usuario' => 'ADM', 'senha' => password_hash('1234', PASSWORD_DEFAULT)],
-        ['usuario' => 'FUNC', 'senha' => password_hash('123', PASSWORD_DEFAULT)]
+        ['usuario' => 'ADM', 'senha' => password_hash('1234', PASSWORD_DEFAULT), 'tipo' => 'ADMIN', 'nome' => 'Administrador'],
+        ['usuario' => 'FUNC', 'senha' => password_hash('123', PASSWORD_DEFAULT), 'tipo' => 'FUNCIONARIO', 'nome' => 'Funcionário']
     ];
 
     foreach ($usuarios as $u) {
         $stmt = $pdo->prepare("SELECT id FROM usuarios WHERE usuario = :usuario");
         $stmt->execute(['usuario' => $u['usuario']]);
         if ($stmt->rowCount() == 0) {
-            $stmt_insert = $pdo->prepare("INSERT INTO usuarios (usuario, senha) VALUES (:usuario, :senha)");
+            $stmt_insert = $pdo->prepare(
+                "INSERT INTO usuarios (usuario, senha, tipo_usuario, nome) VALUES (:usuario, :senha, :tipo, :nome)"
+            );
             $stmt_insert->execute([
                 'usuario' => $u['usuario'],
-                'senha' => $u['senha']
+                'senha' => $u['senha'],
+                'tipo' => $u['tipo'],
+                'nome' => $u['nome']
             ]);
         }
     }

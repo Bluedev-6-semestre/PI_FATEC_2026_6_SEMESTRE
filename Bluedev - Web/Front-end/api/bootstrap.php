@@ -17,20 +17,49 @@ function api_read_json()
     return $data;
 }
 
+// Conexão com o banco + autenticação/permissões (precisa vir depois de api_respond).
+require_once dirname(__DIR__) . '/auth.php';
+
 function api_require_login()
 {
-    if (session_status() !== PHP_SESSION_ACTIVE) {
-        session_start();
-    }
-
-    if (empty($_SESSION['usuario_id']) || empty($_SESSION['tipo_usuario'])) {
+    $user = auth_user();
+    if ($user === null) {
         api_respond(['erro' => 'Autenticação necessária.'], 401);
     }
+    return $user;
+}
 
-    return [
-        'id' => (int) $_SESSION['usuario_id'],
-        'tipo' => $_SESSION['tipo_usuario']
-    ];
+function api_require_admin()
+{
+    $user = api_require_login();
+    if ($user['tipo'] !== 'ADM') {
+        api_respond(['erro' => 'Somente administradores podem realizar esta operação.'], 403);
+    }
+    return $user;
+}
+
+function api_require_permission($permissao, $mensagem = 'Você não tem permissão para esta operação.')
+{
+    $user = api_require_login();
+    if (!auth_can($permissao, $user)) {
+        api_respond(['erro' => $mensagem], 403);
+    }
+    return $user;
+}
+
+// Busca textual (?q=) usada nas listagens.
+function api_busca($campos, &$params)
+{
+    $q = isset($_GET['q']) && is_string($_GET['q']) ? trim($_GET['q']) : '';
+    if ($q === '') {
+        return '';
+    }
+    $partes = [];
+    foreach ($campos as $i => $campo) {
+        $partes[] = $campo . ' LIKE :q' . $i;
+        $params[':q' . $i] = auth_like($q);
+    }
+    return '(' . implode(' OR ', $partes) . ')';
 }
 
 function api_validate_occurrence($data, $usuario)
@@ -113,18 +142,13 @@ function api_verify_machine($pdo, $maquinaId, $usuario)
         return;
     }
 
-    $sql = 'SELECT id FROM maquinas WHERE id = :id';
-    if ($usuario['tipo'] !== 'ADM') {
-        $sql .= ' AND usuario_id = :usuario_id';
-    }
-    $stmt = $pdo->prepare($sql);
+    // Máquinas são cadastradas pelo administrador; qualquer funcionário com
+    // permissão de registrar ocorrências pode vinculá-las a uma ocorrência.
+    $stmt = $pdo->prepare('SELECT id FROM maquinas WHERE id = :id');
     $stmt->bindValue(':id', $maquinaId, PDO::PARAM_INT);
-    if ($usuario['tipo'] !== 'ADM') {
-        $stmt->bindValue(':usuario_id', $usuario['id'], PDO::PARAM_INT);
-    }
     $stmt->execute();
 
     if (!$stmt->fetch(PDO::FETCH_ASSOC)) {
-        api_respond(['erro' => 'Máquina não encontrada ou sem permissão de acesso.'], 422);
+        api_respond(['erro' => 'Máquina não encontrada.'], 422);
     }
 }

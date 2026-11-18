@@ -1,35 +1,22 @@
 <?php
-session_start();
+require_once __DIR__ . '/auth.php';
 
-$usuarios = [
-    'ADM'  => ['senha' => '1234', 'id' => 1],
-    'FUNC' => ['senha' => '123', 'id' => 2]
-];
-
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $usuario = strtoupper($_POST['usuario']); 
-    $senha   = $_POST['senha'];
-
-    if (isset($usuarios[$usuario]) && $usuarios[$usuario]['senha'] === $senha) {
-        session_regenerate_id(true);
-        $_SESSION['loggedin'] = true;
-        $_SESSION['usuario'] = $usuario;
-        $_SESSION['usuario_id'] = $usuarios[$usuario]['id'];
-
-        if ($usuario === "ADM") {
-            $_SESSION['tipo_usuario'] = 'ADM';
-            header("Location: inicial_adm.php");
-            exit();
-        } elseif ($usuario === "FUNC") {
-            $_SESSION['tipo_usuario'] = 'FUNC';
-            header("Location: inicial_func.php");
-            exit();
-        }
-    } else {
-        echo "Usuário ou senha inválidos.";
-    }
-} else {
-    header("Location: index.html");
+if ($_SERVER["REQUEST_METHOD"] !== "POST") {
+    header("Location: index.php");
     exit();
 }
-?>
+
+$usuario = is_string($_POST['usuario'] ?? null) ? trim($_POST['usuario']) : '';
+$senha   = is_string($_POST['senha'] ?? null) ? $_POST['senha'] : '';
+
+// Autenticação real: usuário e senha (hash) vêm da tabela usuarios.
+$row = auth_autenticar($usuario, $senha);
+
+if ($row === null) {
+    echo "Usuário ou senha inválidos.";
+    exit();
+}
+
+$tipo = auth_iniciar_sessao($row);
+header("Location: " . ($tipo === 'ADM' ? 'inicial_adm.php' : 'inicial_func.php'));
+exit();

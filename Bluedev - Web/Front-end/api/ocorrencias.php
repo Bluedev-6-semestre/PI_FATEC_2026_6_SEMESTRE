@@ -6,7 +6,7 @@ require_once dirname(__DIR__) . '/bd.php';
 $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method === 'GET') {
-    $status = isset($_GET['status']) ? trim($_GET['status']) : '';
+    $status = isset($_GET['status']) && is_string($_GET['status']) ? trim($_GET['status']) : '';
     $sql = 'SELECT o.id, o.usuario_id, u.usuario AS usuario_nome, o.titulo, '
         . 'o.tipo, o.status, o.descricao, o.imagem, o.maquina_id, '
         . 'o.data_criacao, m.nome AS nome_maquina '
@@ -15,9 +15,17 @@ if ($method === 'GET') {
     $conditions = [];
     $params = [];
 
+    // Administrador enxerga todas; funcionário, apenas as próprias.
     if ($usuario['tipo'] !== 'ADM') {
         $conditions[] = 'o.usuario_id = :usuario_id';
         $params[':usuario_id'] = $usuario['id'];
+    } elseif (isset($_GET['usuario_id']) && $_GET['usuario_id'] !== '') {
+        $filtroUsuario = filter_var($_GET['usuario_id'], FILTER_VALIDATE_INT);
+        if ($filtroUsuario === false) {
+            api_respond(['erro' => 'Filtro de usuário inválido.'], 422);
+        }
+        $conditions[] = 'o.usuario_id = :filtro_usuario';
+        $params[':filtro_usuario'] = $filtroUsuario;
     }
     if ($status !== '') {
         if ($status === 'Concluída' || $status === 'Concluído') {
@@ -26,6 +34,23 @@ if ($method === 'GET') {
             $conditions[] = 'o.status = :status';
             $params[':status'] = $status;
         }
+    }
+    $tipoFiltro = isset($_GET['tipo']) && is_string($_GET['tipo']) ? trim($_GET['tipo']) : '';
+    if ($tipoFiltro !== '') {
+        $conditions[] = 'o.tipo = :tipo';
+        $params[':tipo'] = $tipoFiltro;
+    }
+    if (isset($_GET['maquina_id']) && $_GET['maquina_id'] !== '') {
+        $filtroMaquina = filter_var($_GET['maquina_id'], FILTER_VALIDATE_INT);
+        if ($filtroMaquina === false) {
+            api_respond(['erro' => 'Filtro de máquina inválido.'], 422);
+        }
+        $conditions[] = 'o.maquina_id = :filtro_maquina';
+        $params[':filtro_maquina'] = $filtroMaquina;
+    }
+    $busca = api_busca(['o.titulo', 'o.descricao', 'm.nome', 'u.usuario'], $params);
+    if ($busca !== '') {
+        $conditions[] = $busca;
     }
     if ($conditions) {
         $sql .= ' WHERE ' . implode(' AND ', $conditions);
@@ -38,6 +63,11 @@ if ($method === 'GET') {
 }
 
 if ($method === 'POST' || $method === 'PUT') {
+    if ($method === 'POST') {
+        api_require_permission('registrar_ocorrencias', 'Você não tem permissão para registrar ocorrências.');
+    } elseif (!auth_is_admin($usuario)) {
+        api_require_permission('gerenciar_ocorrencias', 'Você não tem permissão para atualizar ocorrências.');
+    }
     $body = api_read_json();
     $data = api_validate_occurrence($body, $usuario);
     api_verify_machine($pdo, $data['maquina_id'], $usuario);
@@ -105,9 +135,7 @@ if ($method === 'POST' || $method === 'PUT') {
 }
 
 if ($method === 'DELETE') {
-    if ($usuario['tipo'] !== 'ADM') {
-        api_respond(['erro' => 'Somente administradores podem excluir ocorrências.'], 403);
-    }
+    api_require_admin();
     $id = filter_var(isset($_GET['id']) ? $_GET['id'] : null, FILTER_VALIDATE_INT);
     if (!$id) {
         api_respond(['erro' => 'Identificador de ocorrência inválido.'], 400);
