@@ -120,6 +120,9 @@ if ($method === 'GET') {
 }
 
 if ($method === 'POST' || $method === 'PUT') {
+    if ($usuario['tipo'] !== 'ADM') {
+        api_respond(['erro' => 'Somente administradores podem cadastrar ou alterar fornecedores.'], 403);
+    }
     $body = api_read_json();
     $nameValue = isset($body['nome']) ? $body['nome'] : '';
     $cnpjValue = isset($body['cnpj']) ? $body['cnpj'] : '';

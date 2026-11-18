@@ -1,5 +1,6 @@
 <?php
-session_start();
+require_once __DIR__ . '/auth.php';
+require_login();
 require 'bd.php';
 
 $usuario_id = $_SESSION['usuario_id'] ?? 0;
@@ -31,10 +32,19 @@ try {
 
 if ($id) {
     try {
-        $stmt = $pdo->prepare("SELECT * FROM ocorrencias WHERE id = :id");
-        $stmt->execute([':id' => $id]);
+        $sql = "SELECT * FROM ocorrencias WHERE id = :id";
+        $params = [':id' => $id];
+        if ($tipo_usuario !== 'ADM') {
+            $sql .= " AND usuario_id = :usuario_id";
+            $params[':usuario_id'] = $usuario_id;
+        }
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
         $dados = $stmt->fetch(PDO::FETCH_ASSOC);
-        if (!$dados) die("Ocorrência não encontrada.");
+        if (!$dados) {
+            http_response_code(404);
+            die("Ocorrência não encontrada ou sem permissão de acesso.");
+        }
     } catch (PDOException $e) {
         die("Erro ao buscar ocorrência: " . $e->getMessage());
     }
@@ -67,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     try {
         if ($id) {
-            $stmt = $pdo->prepare("
+            $sql = "
                 UPDATE ocorrencias 
                 SET maquina_id = :maquina_id,
                     titulo = :titulo,
@@ -75,10 +85,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     status = :status,
                     descricao = :descricao,
                     imagem = :imagem
-                WHERE id = :id
-            ");
+                WHERE id = :id";
+            if ($tipo_usuario !== 'ADM') {
+                $sql .= " AND usuario_id = :usuario_id";
+            }
+            $stmt = $pdo->prepare($sql);
 
-            $stmt->execute([
+            $params = [
                 ':maquina_id' => $maquina_id,
                 ':titulo' => $titulo,
                 ':tipo' => $tipo,
@@ -86,7 +99,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ':descricao' => $descricao,
                 ':imagem' => $imagem,
                 ':id' => $id
-            ]);
+            ];
+            if ($tipo_usuario !== 'ADM') {
+                $params[':usuario_id'] = $usuario_id;
+            }
+            $stmt->execute($params);
         } else {
             $stmt = $pdo->prepare("
                 INSERT INTO ocorrencias 

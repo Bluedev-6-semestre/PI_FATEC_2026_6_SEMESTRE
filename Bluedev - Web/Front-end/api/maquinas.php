@@ -36,6 +36,9 @@ if ($method === 'GET') {
 }
 
 if ($method === 'POST' || $method === 'PUT') {
+    if ($usuario['tipo'] !== 'ADM') {
+        api_respond(['erro' => 'Somente administradores podem cadastrar ou alterar máquinas.'], 403);
+    }
     $body = api_read_json();
     $nomeValue = isset($body['nome']) ? $body['nome'] : '';
     $codigoValue = isset($body['codigo']) ? $body['codigo'] : '';

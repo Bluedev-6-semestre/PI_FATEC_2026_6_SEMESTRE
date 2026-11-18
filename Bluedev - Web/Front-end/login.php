@@ -11,6 +11,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $senha   = $_POST['senha'];
 
     if (isset($usuarios[$usuario]) && $usuarios[$usuario]['senha'] === $senha) {
+        session_regenerate_id(true);
         $_SESSION['loggedin'] = true;
         $_SESSION['usuario'] = $usuario;
         $_SESSION['usuario_id'] = $usuarios[$usuario]['id'];

@@ -1,10 +1,6 @@
 <?php
-session_start();
-
-if (!isset($_SESSION['usuario_id'])) {
-    header("Location: login.php");
-    exit();
-}
+require_once __DIR__ . '/auth.php';
+require_role('FUNC');
 
 $usuario_id = $_SESSION['usuario_id'];
 $tipo_usuario = $_SESSION['tipo_usuario'] ?? '';
