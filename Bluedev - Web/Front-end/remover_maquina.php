@@ -1,29 +1,20 @@
 <?php
-session_start();
-require 'bd.php';
+require_once __DIR__ . '/includes/auth.php';
+require_admin();
 
-if (!isset($_SESSION['usuario_id'])) {
-    header('Location: login.php');
+$ids = $_POST['maquinas'] ?? [];
+if (!is_array($ids) || !$ids) {
+    api_flash_error('Selecione pelo menos uma máquina para remover.');
+    header('Location: maquinas.php');
     exit();
 }
-
-if (!isset($_POST['maquinas']) || empty($_POST['maquinas'])) {
-    die("Nenhuma máquina selecionada para remoção.");
-}
-
-$ids = $_POST['maquinas'];
-$ids = array_map('intval', $ids); 
 
 try {
-    $placeholders = implode(',', array_fill(0, count($ids), '?'));
-
-    $stmt = $pdo->prepare("DELETE FROM maquinas WHERE id IN ($placeholders)");
-    $stmt->execute($ids);
-
-    header("Location: maquinas.php");
-    exit();
-
-} catch (PDOException $e) {
-    die("Erro ao remover máquinas: " . $e->getMessage());
+    foreach (array_unique(array_map('intval', $ids)) as $id) {
+        if ($id > 0) api_request('DELETE', '/api/maquinas/' . $id);
+    }
+} catch (Throwable $exception) {
+    api_flash_error(api_user_message($exception));
 }
-?>
+header('Location: maquinas.php');
+exit();
