@@ -1,6 +1,7 @@
 package com.bluedev.user_service.controller;
 
 import com.bluedev.user_service.dto.*;
+import com.bluedev.user_service.entity.TipoUsuario;
 import com.bluedev.user_service.service.UsuarioService;
 
 import jakarta.validation.Valid;
@@ -28,10 +29,15 @@ public class UsuarioController {
                 .body(usuarioService.cadastrar(request));
     }
 
+    // Filtros opcionais: q (usuario/nome), tipo (ADMIN|FUNCIONARIO) e ativo (true|false).
     @GetMapping
-    public ResponseEntity<List<ListarUsuarioResponseDto>> listarTodos() {
+    public ResponseEntity<List<ListarUsuarioResponseDto>> listarTodos(
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) TipoUsuario tipo,
+            @RequestParam(required = false) Boolean ativo
+    ) {
 
-        return ResponseEntity.ok(usuarioService.listarTodos());
+        return ResponseEntity.ok(usuarioService.listar(q, tipo, ativo));
     }
 
     @GetMapping("/{id}")

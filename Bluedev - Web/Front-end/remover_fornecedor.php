@@ -1,17 +1,16 @@
 <?php
-session_start();
-require 'bd.php';
-
-$tipo_usuario = $_SESSION['tipo_usuario'] ?? '';
-if ($tipo_usuario !== 'ADM') {
-    die("Acesso negado.");
-}
+require_once __DIR__ . '/auth.php';
+auth_require_admin();
+auth_require_post();
 
 if (empty($_POST['fornecedores']) || !is_array($_POST['fornecedores'])) {
     die("Nenhum fornecedor selecionado para remoção.");
 }
 
-$fornecedores = $_POST['fornecedores'];
+$fornecedores = array_values(array_filter(array_map('intval', $_POST['fornecedores']), fn($v) => $v > 0));
+if (!$fornecedores) {
+    die("Nenhum fornecedor selecionado para remoção.");
+}
 
 try {
     $placeholders = implode(',', array_fill(0, count($fornecedores), '?'));
@@ -23,4 +22,3 @@ try {
 } catch (PDOException $e) {
     die("Erro ao remover fornecedores: " . $e->getMessage());
 }
-?>

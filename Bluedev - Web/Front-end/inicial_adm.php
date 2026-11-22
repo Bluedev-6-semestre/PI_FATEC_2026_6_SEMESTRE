@@ -1,11 +1,6 @@
 <?php
-session_start();
-
-if (!isset($_SESSION['usuario_id'])) {
-    header("Location: login.php");
-    exit();
-}
-
+require_once __DIR__ . '/auth.php';
+auth_require_admin();
 ?>
 
 <!DOCTYPE html>
@@ -18,7 +13,7 @@ if (!isset($_SESSION['usuario_id'])) {
 </head>
 <body>
     <div class="navbar">
-    <a href="index.php" class="logout-icon">
+    <a href="logout.php" class="logout-icon">
         <img src="../Imagens/icone_sair.png" alt="Sair">
     </a>
 </div>
@@ -40,7 +35,11 @@ if (!isset($_SESSION['usuario_id'])) {
                 <img src="../Imagens/func_icone.png" alt="Funcionários"> Funcionários
             </a>
         </li>
-       
+        <li>
+            <a href="usuarios.php">
+                <img src="../Imagens/perfil.png" alt="Usuários"> Usuários
+            </a>
+        </li>
         <li>
             <a href="maquinas.php">
                 <img src="../Imagens/maquina_icone.png" alt="Máquinas"> Máquinas

@@ -1,0 +1,111 @@
+/* Complementos do backoffice (busca, filtros, usuários). Não altera o CSS existente. */
+
+.busca-form {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-right: 10px;
+}
+
+.busca-form input[type="search"],
+.busca-form select {
+    padding: 7px 10px;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    font-size: 14px;
+    background: #fff;
+}
+
+.busca-form input[type="search"] { min-width: 160px; }
+
+.busca-form button { margin-left: 0 !important; }
+
+.menu-filtro-largo { min-width: 210px; }
+
+.menu-filtro-largo label {
+    display: block;
+    margin: 6px 0 2px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.menu-filtro-largo select { width: 100%; margin-bottom: 2px; }
+
+.menu-filtro-acoes {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 10px;
+}
+
+.menu-filtro-acoes button {
+    background: #291aad;
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    padding: 6px 14px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.menu-filtro-acoes a { font-size: 13px; color: #291aad; }
+
+p.erro, .erro-form {
+    background: #ffe5e5;
+    color: #b00000;
+    border: 1px solid #f5b5b5;
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin: 0 auto 12px;
+    max-width: 440px;
+    font-size: 14px;
+}
+
+.ok-form {
+    background: #e4f6e6;
+    color: #1d6b2a;
+    border: 1px solid #b6e0bb;
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin: 0 0 12px;
+    font-size: 14px;
+}
+
+.form-usuario select,
+.form-usuario input[type="password"] {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+
+.form-usuario .grupo-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+}
+
+.form-usuario .grupo-check input { width: auto; }
+
+.form-usuario fieldset {
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 8px 12px;
+}
+
+.form-usuario fieldset legend { font-size: 13px; font-weight: bold; padding: 0 4px; }
+
+.form-usuario small { color: #666; font-size: 12px; }
+
+.selo {
+    display: inline-block;
+    padding: 1px 8px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: bold;
+    color: #fff;
+    background: #291aad;
+}
+
+.selo.func { background: #5b6b7b; }
+.selo.inativo { background: #b00000; }

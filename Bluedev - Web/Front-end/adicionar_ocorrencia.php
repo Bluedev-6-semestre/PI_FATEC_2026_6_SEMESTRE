@@ -1,10 +1,9 @@
 <?php
-session_start();
-require 'bd.php';
-
-$usuario_id = $_SESSION['usuario_id'] ?? 0;
-$tipo_usuario = $_SESSION['tipo_usuario'] ?? '';
-$id = $_GET['id'] ?? null;
+require_once __DIR__ . '/auth.php';
+$auth = auth_require_login();
+$usuario_id = $auth['id'];
+$tipo_usuario = $auth['tipo'];
+$id = isset($_GET['id']) ? (int) $_GET['id'] : null;
 $modo = $id ? 'editar' : 'adicionar';
 
 $dados = [
@@ -16,14 +15,19 @@ $dados = [
     'maquina_id' => ''
 ];
 
-try {
-    if ($tipo_usuario === 'ADM') {
-        $stmtMaquinas = $pdo->query("SELECT id, nome FROM maquinas ORDER BY nome");
-    } else {
-        $stmtMaquinas = $pdo->prepare("SELECT id, nome FROM maquinas WHERE usuario_id = :usuario_id ORDER BY nome");
-        $stmtMaquinas->bindValue(':usuario_id', $usuario_id, PDO::PARAM_INT);
-        $stmtMaquinas->execute();
+// Registrar exige permissão própria; atualizar: admin (qualquer uma) ou
+// funcionário (somente as próprias e com permissão).
+if ($id) {
+    if (!auth_is_admin($auth)) {
+        auth_require_permission('gerenciar_ocorrencias');
     }
+} else {
+    auth_require_permission('registrar_ocorrencias');
+}
+
+try {
+    // Máquinas são cadastradas pelo administrador; todos podem vinculá-las.
+    $stmtMaquinas = $pdo->query("SELECT id, nome FROM maquinas ORDER BY nome");
     $maquinas = $stmtMaquinas->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     die("Erro ao buscar máquinas: " . $e->getMessage());
@@ -35,6 +39,9 @@ if ($id) {
         $stmt->execute([':id' => $id]);
         $dados = $stmt->fetch(PDO::FETCH_ASSOC);
         if (!$dados) die("Ocorrência não encontrada.");
+        if (!auth_is_admin($auth) && (int) $dados['usuario_id'] !== $usuario_id) {
+            auth_negar('Você só pode alterar as suas próprias ocorrências.');
+        }
     } catch (PDOException $e) {
         die("Erro ao buscar ocorrência: " . $e->getMessage());
     }
@@ -42,16 +49,41 @@ if ($id) {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    $titulo = $_POST['titulo'] ?? '';
+    $titulo = is_string($_POST['titulo'] ?? null) ? trim($_POST['titulo']) : '';
     $tipo = $_POST['tipo'] ?? '';
     $status = $_POST['status'] ?? '';
-    $descricao = $_POST['descricao'] ?? '';
-    $maquina_id = !empty($_POST['maquina_id']) ? $_POST['maquina_id'] : null;
+    $descricao = is_string($_POST['descricao'] ?? null) ? $_POST['descricao'] : '';
+    $maquina_id = !empty($_POST['maquina_id']) ? (int) $_POST['maquina_id'] : null;
     $imagem = $dados['imagem'];
 
+    if ($titulo === '' || mb_strlen($titulo) > 100) {
+        die("Informe um título com até 100 caracteres.");
+    }
+    if (!in_array($tipo, ['Preventiva', 'Corretiva'], true)) {
+        die("Tipo de manutenção inválido.");
+    }
+    if (!in_array($status, ['Pendente', 'Em andamento', 'Concluída', 'Concluído'], true)) {
+        die("Status inválido.");
+    }
+    if ($maquina_id !== null) {
+        $chk = $pdo->prepare("SELECT id FROM maquinas WHERE id = :id");
+        $chk->execute([':id' => $maquina_id]);
+        if (!$chk->fetch()) {
+            die("Máquina não encontrada.");
+        }
+    }
+
     if (isset($_FILES['imagem']) && $_FILES['imagem']['error'] !== UPLOAD_ERR_NO_FILE) {
-        $extensao = pathinfo($_FILES['imagem']['name'], PATHINFO_EXTENSION);
-        $nomeArquivo = uniqid('img_') . '.' . strtolower($extensao);
+        // Aceita somente imagens reais (JPEG, PNG ou WebP) de até 5 MB.
+        $permitidos = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
+        if ($_FILES['imagem']['error'] !== UPLOAD_ERR_OK || $_FILES['imagem']['size'] > 5 * 1024 * 1024) {
+            die("Erro ao enviar a imagem (máximo de 5 MB).");
+        }
+        $mime = (new finfo(FILEINFO_MIME_TYPE))->file($_FILES['imagem']['tmp_name']);
+        if (!isset($permitidos[$mime])) {
+            die("Formato de imagem não permitido.");
+        }
+        $nomeArquivo = 'img_' . bin2hex(random_bytes(12)) . '.' . $permitidos[$mime];
 
         $diretorioUploads = __DIR__ . '/uploads/';
         if (!is_dir($diretorioUploads)) mkdir($diretorioUploads, 0755, true);
@@ -120,11 +152,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $modo === 'editar' ? 'Editar' : 'Adicionar' ?> Ocorrência</title>
     <link rel="stylesheet" href="style/style_base.css">
+<link rel="stylesheet" href="style/admin.css">
 </head>
 <body>
     <div class="navbar">
         <img src="../Imagens/logo_cliente.jpeg" alt="Logo Cliente" class="logo-cliente">
-        <a href="index.php" class="logout-icon">
+        <a href="logout.php" class="logout-icon">
             <img src="../Imagens/icone_sair.png" alt="Sair">
         </a>
         <a href="ocorrencias.php" class="voltar-icon">
@@ -133,17 +166,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 
     <div class="container">
-    <aside class="sidebar">
-        <ul>
-            <li><a href="ocorrencias.php"><img src="../Imagens/ocorrencia_icone.png"> Ocorrências</a></li>
-            <?php if ($tipo_usuario === 'ADM'): ?>
-                <li><a href="fornecedores.php"><img src="../Imagens/fornecedor_icone.png"> Fornecedores</a></li>
-                <li><a href="funcionarios.php"><img src="../Imagens/func_icone.png"> Funcionários</a></li>
-                <li><a href="maquinas.php"><img src="../Imagens/maquina_icone.png"> Máquinas</a></li>
-            <?php endif; ?>
-            <li><a href="relatorios.php"><img src="../Imagens/relatorio_icone.png"> Relatórios</a></li>
-        </ul>
-    </aside>
+    <?php $menuAtivo = 'ocorrencias'; include 'menu.php'; ?>
 
 
         <main class="main-content">

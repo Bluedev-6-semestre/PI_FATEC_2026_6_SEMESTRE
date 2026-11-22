@@ -1,18 +1,19 @@
 <?php
-session_start();
-require 'bd.php';
-
-$tipo_usuario = $_SESSION['tipo_usuario'] ?? '';
-$usuario_id   = $_SESSION['usuario_id'] ?? 0;
+require_once __DIR__ . '/auth.php';
+$auth = auth_require_permission('ver_cadastros');
+$tipo_usuario = $auth['tipo'];
+$busca = isset($_GET['q']) && is_string($_GET['q']) ? trim($_GET['q']) : '';
 
 try {
-    if ($tipo_usuario === 'ADM') {
-        $stmt = $pdo->prepare("SELECT * FROM funcionarios ORDER BY id DESC");
-    } else {
-        $stmt = $pdo->prepare("SELECT * FROM funcionarios WHERE usuario_id = :usuario_id ORDER BY id DESC");
-        $stmt->bindValue(':usuario_id', $usuario_id, PDO::PARAM_INT);
+    $sql = "SELECT * FROM funcionarios";
+    $params = [];
+    if ($busca !== '') {
+        $sql .= " WHERE nome LIKE :q1 OR funcao LIKE :q2";
+        $params[':q1'] = auth_like($busca);
+        $params[':q2'] = auth_like($busca);
     }
-    $stmt->execute();
+    $stmt = $pdo->prepare($sql . " ORDER BY id DESC");
+    $stmt->execute($params);
     $funcionarios = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     die("Erro ao buscar funcionários: " . $e->getMessage());
@@ -25,34 +26,29 @@ try {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Página Funcionários</title>
 <link rel="stylesheet" href="style/style_base.css">
+<link rel="stylesheet" href="style/admin.css">
 </head>
 <body>
 <div class="navbar">
     <img src="../Imagens/logo_cliente.jpeg" alt="Logo Cliente" class="logo-cliente">
-    <a href="index.php" class="logout-icon">
+    <a href="logout.php" class="logout-icon">
         <img src="../Imagens/icone_sair.png" alt="Sair">
     </a>
 </div>
 
 <div class="container">
-    <aside class="sidebar">
-        <ul>
-            <li><a href="ocorrencias.php"><img src="../Imagens/ocorrencia_icone.png" alt="Ocorrências"> Ocorrências</a></li>
-            <?php if ($tipo_usuario === 'ADM'): ?>
-                <li><a href="fornecedores.php"><img src="../Imagens/fornecedor_icone.png" alt="Fornecedores"> Fornecedores</a></li>
-                <li><a href="funcionarios.php" class="ativo"><img src="../Imagens/func_icone.png" alt="Funcionários"> Funcionários</a></li>
-                <li><a href="maquinas.php"><img src="../Imagens/maquina_icone.png" alt="Máquinas"> Máquinas</a></li>
-            <?php endif; ?>
-            <li><a href="relatorios.php"><img src="../Imagens/relatorio_icone.png" alt="Relatórios"> Relatórios</a></li>
-        </ul>
-    </aside>
+    <?php $menuAtivo = 'funcionarios'; include 'menu.php'; ?>
 
     <main class="main-content">
         <div class="titulo-pagina">
             <h2>FUNCIONÁRIOS</h2>
             <div class="botoes">
-                <button onclick="window.location.href='adicionar_funcionario.php'">ADICIONAR</button>
+                <form method="GET" class="busca-form">
+                    <input type="search" name="q" placeholder="Buscar..." value="<?= htmlspecialchars($busca) ?>" aria-label="Buscar">
+                    <button type="submit">BUSCAR</button>
+                </form>
                 <?php if ($tipo_usuario === 'ADM'): ?>
+                    <button onclick="window.location.href='adicionar_funcionario.php'" type="button">ADICIONAR</button>
                     <button id="btnRemover" type="button" class="btn-remover">REMOVER</button>
                 <?php endif; ?>
             </div>
@@ -72,9 +68,11 @@ try {
                                 <p><strong>Função:</strong> <?= htmlspecialchars($f['funcao']) ?></p>
                             </div>
                             <div class="acoes">
+                                <?php if ($tipo_usuario === 'ADM'): ?>
                                 <a href="adicionar_funcionario.php?id=<?= $f['id'] ?>">
                                     <img src="../Imagens/editar.png" alt="Editar">
                                 </a>
+                                <?php endif; ?>
                                 <a href="#"
                                    class="ver-mais"
                                    data-id="<?= $f['id'] ?>"
@@ -88,7 +86,7 @@ try {
                     <?php endforeach; ?>
                 <?php else: ?>
                     <div class="sem-funcionarios">
-                        <p>Nenhum funcionário cadastrado no momento.</p>
+                        <p><?= $busca !== '' ? 'Nenhum resultado para a busca.' : 'Nenhum funcionário cadastrado no momento.' ?></p>
                         <img src="../Imagens/nada_encontrado3.png" alt="Sem funcionários">
                     </div>
                 <?php endif; ?>
@@ -104,7 +102,7 @@ try {
         <p><strong>Idade:</strong> <span id="modalIdade"></span></p>
         <p><strong>Função:</strong> <span id="modalFuncao"></span></p>
         <div class="botoes-modal">
-            <button id="btnEditar" class="btn-editar">Editar</button>
+            <?php if ($tipo_usuario === 'ADM'): ?><button id="btnEditar" class="btn-editar">Editar</button><?php endif; ?>
             <button class="btn-fechar" onclick="fecharModal()">Fechar</button>
         </div>
     </div>
@@ -119,7 +117,7 @@ function abrirModal(f) {
     document.getElementById('modalNome').textContent = f.nome;
     document.getElementById('modalIdade').textContent = f.idade;
     document.getElementById('modalFuncao').textContent = f.funcao;
-    btnEditar.onclick = () => window.location.href = `adicionar_funcionario.php?id=${f.id}`;
+    if (btnEditar) btnEditar.onclick = () => window.location.href = `adicionar_funcionario.php?id=${f.id}`;
     modal.style.display = 'flex';
 }
 

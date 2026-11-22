@@ -25,4 +25,18 @@ public class Usuario {
     @Enumerated(EnumType.STRING)
     @Column(name = "tipo_usuario", nullable = false, length = 20)
     private TipoUsuario tipoUsuario;
+
+    @Column(length = 100)
+    private String nome;
+
+    @Column(nullable = false)
+    private Boolean ativo = true;
+
+    // Permissoes separadas por virgula (ex.: "ver_cadastros,registrar_ocorrencias").
+    // Administradores tem acesso total e nao usam este campo.
+    @Column(length = 255)
+    private String permissoes;
+
+    @Column(name = "funcionario_id")
+    private Integer funcionarioId;
 }

@@ -1,5 +1,6 @@
 package com.bluedev.user_service.repository;
 
+import com.bluedev.user_service.entity.TipoUsuario;
 import com.bluedev.user_service.entity.Usuario;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -12,4 +13,8 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
     boolean existsByUsuario(String usuario);
 
     boolean existsByUsuarioAndIdNot(String usuario, Integer id);
+
+    boolean existsByFuncionarioIdAndIdNot(Integer funcionarioId, Integer id);
+
+    long countByTipoUsuarioAndAtivoTrue(TipoUsuario tipoUsuario);
 }
