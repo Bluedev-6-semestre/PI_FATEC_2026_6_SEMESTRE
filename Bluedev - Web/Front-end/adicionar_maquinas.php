@@ -1,84 +1,56 @@
 <?php
-session_start();
-require 'bd.php';
+require_once __DIR__ . '/includes/auth.php';
+require_login();
+$tipo_usuario = current_user_type();
 
-$usuario_id = $_SESSION['usuario_id'] ?? 0;
-if (!$usuario_id) {
-    header('Location: login.php');
-    exit();
-}
-
-$id = $_GET['id'] ?? null;
+$id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT) ?: null;
 $modo = $id ? 'editar' : 'adicionar';
-
 $dados = [
-    'nome' => '',
-    'codigo' => '',
-    'modelo' => '',
-    'fabricante' => '',
-    'data_aquisicao' => '',
-    'status_maquina' => '',
-    'descricao' => ''
+    'usuarioId' => current_user_id(), 'nome' => '', 'codigo' => '', 'modelo' => '',
+    'fabricante' => '', 'numeroSerie' => '', 'dataAquisicao' => '',
+    'localizacao' => '', 'statusMaquina' => '', 'descricao' => ''
 ];
+$erro = null;
 
 if ($id) {
     try {
-        $stmt = $pdo->prepare("SELECT * FROM maquinas WHERE id = :id");
-        $stmt->execute([':id' => $id]);
-        $dados = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if (!$dados) {
-            die("Máquina não encontrada.");
+        $dados = api_request('GET', '/api/maquinas/' . $id);
+        if (!is_admin() && (int) ($dados['usuarioId'] ?? 0) !== current_user_id()) {
+            http_response_code(403);
+            exit('Você não tem permissão para editar esta máquina.');
         }
-    } catch (PDOException $e) {
-        die("Erro ao buscar máquina: " . $e->getMessage());
+    } catch (Throwable $exception) {
+        http_response_code($exception instanceof ApiException && $exception->getHttpStatus() === 404 ? 404 : 502);
+        exit(htmlspecialchars(api_user_message($exception), ENT_QUOTES, 'UTF-8'));
     }
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $nome = trim($_POST['nome'] ?? '');
-    $codigo = trim($_POST['codigo'] ?? '');
-    $modelo = trim($_POST['modelo'] ?? '');
-    $fabricante = trim($_POST['fabricante'] ?? '');
-    $data_aquisicao = trim($_POST['data_aquisicao'] ?? '');
-    $status_maquina = trim($_POST['status_maquina'] ?? '');
-    $descricao = trim($_POST['descricao'] ?? '');
+    $payload = [
+        'usuarioId' => (int) ($dados['usuarioId'] ?? current_user_id()),
+        'nome' => trim($_POST['nome'] ?? ''),
+        'codigo' => trim($_POST['codigo'] ?? ''),
+        'modelo' => trim($_POST['modelo'] ?? ''),
+        'fabricante' => trim($_POST['fabricante'] ?? ''),
+        'numeroSerie' => trim($_POST['numero_serie'] ?? ''),
+        'dataAquisicao' => trim($_POST['data_aquisicao'] ?? ''),
+        'localizacao' => trim($_POST['localizacao'] ?? ''),
+        'statusMaquina' => trim($_POST['status_maquina'] ?? ''),
+        'descricao' => trim($_POST['descricao'] ?? '')
+    ];
 
     try {
         if ($id) {
-            $stmt = $pdo->prepare("UPDATE maquinas 
-                                   SET nome = :nome, codigo = :codigo, modelo = :modelo, fabricante = :fabricante, 
-                                       data_aquisicao = :data_aquisicao, status_maquina = :status_maquina, descricao = :descricao 
-                                   WHERE id = :id");
-            $stmt->execute([
-                ':nome' => $nome,
-                ':codigo' => $codigo,
-                ':modelo' => $modelo,
-                ':fabricante' => $fabricante,
-                ':data_aquisicao' => $data_aquisicao,
-                ':status_maquina' => $status_maquina,
-                ':descricao' => $descricao,
-                ':id' => $id
-            ]);
+            api_request('PUT', '/api/maquinas/' . $id, $payload);
         } else {
-            $stmt = $pdo->prepare("INSERT INTO maquinas (usuario_id, nome, codigo, modelo, fabricante, data_aquisicao, status_maquina, descricao) 
-                                   VALUES (:usuario_id, :nome, :codigo, :modelo, :fabricante, :data_aquisicao, :status_maquina, :descricao)");
-            $stmt->execute([
-                ':usuario_id' => $usuario_id,
-                ':nome' => $nome,
-                ':codigo' => $codigo,
-                ':modelo' => $modelo,
-                ':fabricante' => $fabricante,
-                ':data_aquisicao' => $data_aquisicao,
-                ':status_maquina' => $status_maquina,
-                ':descricao' => $descricao
-            ]);
+            $payload['usuarioId'] = current_user_id();
+            api_request('POST', '/api/maquinas', $payload);
         }
-
         header('Location: maquinas.php');
         exit();
-    } catch (PDOException $e) {
-        die("Erro ao salvar máquina: " . $e->getMessage());
+    } catch (Throwable $exception) {
+        $erro = api_user_message($exception);
+        $dados = array_merge($dados, $payload);
     }
 }
 ?>
@@ -93,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
 <div class="navbar">
     <img src="../Imagens/logo_cliente.jpeg" alt="Logo Cliente" class="logo-cliente">
-    <a href="index.php" class="logout-icon">
+    <a href="logout.php" class="logout-icon">
         <img src="../Imagens/icone_sair.png" alt="Sair">
     </a>
     <a href="maquinas.php" class="voltar-icon">
@@ -105,9 +77,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <aside class="sidebar">
         <ul>
             <li><a href="ocorrencias.php"><img src="../Imagens/ocorrencia_icone.png" alt="Ocorrências"> Ocorrências</a></li>
-            <li><a href="fornecedores.php"><img src="../Imagens/fornecedor_icone.png" alt="Fornecedores"> Fornecedores</a></li>
-            <li><a href="funcionarios.php"><img src="../Imagens/func_icone.png" alt="Funcionários"> Funcionários</a></li>
             <li><a href="maquinas.php" class="ativo"><img src="../Imagens/maquina_icone.png" alt="Máquinas"> Máquinas</a></li>
+            <?php if ($tipo_usuario === 'ADM'): ?><li><a href="usuarios.php"><img src="../Imagens/perfil.png" alt="Usuários"> Usuários</a></li><?php endif; ?>
             <li><a href="relatorios.php"><img src="../Imagens/relatorio_icone.png" alt="Relatórios"> Relatórios</a></li>
         </ul>
     </aside>
@@ -117,7 +88,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <h2><?= strtoupper($modo) ?> MÁQUINA</h2>
         </div>
 
-        <form method="POST" class="form-fornecedor">
+        <form method="POST" class="formulario-dados">
+            <?php if ($erro): ?><p class="mensagem-erro" role="alert"><?= htmlspecialchars($erro) ?></p><?php endif; ?>
             <label>Nome</label>
             <input type="text" name="nome" required value="<?= htmlspecialchars($dados['nome']) ?>">
 
@@ -125,20 +97,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <input type="text" name="codigo" required value="<?= htmlspecialchars($dados['codigo']) ?>">
 
             <label>Modelo</label>
-            <input type="text" name="modelo" value="<?= htmlspecialchars($dados['modelo']) ?>">
+            <input type="text" name="modelo" required value="<?= htmlspecialchars($dados['modelo']) ?>">
 
             <label>Fabricante</label>
-            <input type="text" name="fabricante" value="<?= htmlspecialchars($dados['fabricante']) ?>">
+            <input type="text" name="fabricante" required value="<?= htmlspecialchars($dados['fabricante']) ?>">
+
+            <label>Número de Série</label>
+            <input type="text" name="numero_serie" required value="<?= htmlspecialchars($dados['numeroSerie'] ?? '') ?>">
 
             <label>Data de Aquisição</label>
-            <input type="date" name="data_aquisicao" value="<?= htmlspecialchars($dados['data_aquisicao']) ?>">
+            <input type="date" name="data_aquisicao" required value="<?= htmlspecialchars($dados['dataAquisicao']) ?>">
+
+            <label>Localização</label>
+            <input type="text" name="localizacao" required value="<?= htmlspecialchars($dados['localizacao'] ?? '') ?>">
 
             <label>Status da Máquina</label>
             <select name="status_maquina" required>
                 <option value="">Selecione</option>
-                <option value="ativa" <?= $dados['status_maquina']=='ativa'?'selected':'' ?>>Ativa</option>
-                <option value="inativa" <?= $dados['status_maquina']=='inativa'?'selected':'' ?>>Inativa</option>
-                <option value="em manutenção" <?= $dados['status_maquina']=='em manutenção'?'selected':'' ?>>Em manutenção</option>
+                <option value="ativa" <?= $dados['statusMaquina']=='ativa'?'selected':'' ?>>Ativa</option>
+                <option value="inativa" <?= $dados['statusMaquina']=='inativa'?'selected':'' ?>>Inativa</option>
+                <option value="em manutenção" <?= $dados['statusMaquina']=='em manutenção'?'selected':'' ?>>Em manutenção</option>
             </select>
 
             <label>Descrição</label>

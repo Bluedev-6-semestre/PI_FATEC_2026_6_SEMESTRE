@@ -206,7 +206,7 @@ body {
    LISTAS (Ocorrência / Fornecedor)
 ============================ */
 .lista-ocorrencias,
-.lista-fornecedores {
+.lista-itens {
     display: flex;
     flex-direction: column;
     gap: 15px;
@@ -214,7 +214,7 @@ body {
 
 /* Cards */
 .ocorrencia-card,
-.fornecedor-card {
+.item-card {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
@@ -226,7 +226,7 @@ body {
 }
 
 .ocorrencia-card:hover,
-.fornecedor-card:hover {
+.item-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
@@ -266,7 +266,7 @@ body {
 
 /* ===== Checkbox de Remoção ===== */
 .checkbox-ocorrencia,
-.checkbox-fornecedor {
+.checkbox-item {
     display: none;
     margin-right: 10px;
     transform: scale(1.2);
@@ -274,7 +274,7 @@ body {
 }
 
 .remocao-ativa .checkbox-ocorrencia,
-.remocao-ativa .checkbox-fornecedor {
+.remocao-ativa .checkbox-item {
     display: inline-block;
 }
 
@@ -282,7 +282,7 @@ body {
    MENSAGENS "SEM RESULTADO"
 ============================ */
 .sem-ocorrencias,
-.sem-fornecedores {
+.sem-itens {
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -291,14 +291,14 @@ body {
 }
 
 .sem-ocorrencias p,
-.sem-fornecedores p {
+.sem-itens p {
     font-size: 18px;
     font-weight: bold;
     margin-bottom: 100px;
 }
 
 .sem-ocorrencias img,
-.sem-fornecedores img {
+.sem-itens img {
     width: 350px !important;
     height: auto !important;
     margin-top: -60px !important;
@@ -308,7 +308,7 @@ body {
    FORMULÁRIOS (Ocorrência / Fornecedor)
 ============================ */
 .form-ocorrencia,
-.form-fornecedor {
+.formulario-dados {
     background-color: #f5f5f5;
     padding: 30px;
     border-radius: 20px;
@@ -321,17 +321,17 @@ body {
 }
 
 .form-ocorrencia label,
-.form-fornecedor label {
+.formulario-dados label {
     font-weight: bold;
     color: #333;
 }
 
 .form-ocorrencia input,
-.form-fornecedor input,
+.formulario-dados input,
 .form-ocorrencia select,
-.form-fornecedor select,
+.formulario-dados select,
 .form-ocorrencia textarea,
-.form-fornecedor textarea {
+.formulario-dados textarea {
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 8px;
@@ -339,7 +339,7 @@ body {
 }
 
 .form-ocorrencia button,
-.form-fornecedor button {
+.formulario-dados button {
     align-self: flex-start;
     background-color: #1f1288;
     border: 1px solid black;
@@ -351,7 +351,7 @@ body {
 }
 
 .form-ocorrencia button:hover,
-.form-fornecedor button:hover {
+.formulario-dados button:hover {
     background-color: #1b0f77;
 }
 
@@ -614,133 +614,6 @@ body {
 }
 
 /* ============================
-   LISTA DE FUNCIONÁRIOS
-============================ */
-.lista-funcionarios {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.funcionario-card {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    padding: 15px;
-    border: 1px solid #eee;
-    border-radius: 8px;
-    background-color: #fafafa;
-    transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.funcionario-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.info h3 {
-    font-size: 18px;
-    margin-bottom: 5px;
-}
-
-.info p {
-    font-size: 14px;
-    color: #555;
-}
-
-.acoes {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.acoes img {
-    width: 24px;
-    height: 24px;
-    cursor: pointer;
-    transition: transform 0.2s;
-}
-
-.acoes img:hover {
-    transform: scale(1.1);
-}
-
-.checkbox-funcionario {
-    display: none;
-    margin-right: 10px;
-    transform: scale(1.2);
-    accent-color: #d90000;
-}
-
-.remocao-ativa .checkbox-funcionario {
-    display: inline-block;
-}
-
-/* ============================
-   MENSAGEM "SEM FUNCIONÁRIOS"
-============================ */
-.sem-funcionarios {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    margin-top: 10px;
-}
-
-.sem-funcionarios p {
-    font-size: 18px;
-    font-weight: bold;
-    margin-bottom: 100px;
-}
-
-.sem-funcionarios img {
-    width: 500px !important;
-    height: auto !important;
-    margin-top: -155px !important;
-}
-
-/* ============================
-   FORMULÁRIO FUNCIONÁRIOS
-============================ */
-.container-form {
-    background-color: #f5f5f5;
-    padding: 30px;
-    border-radius: 20px;
-    max-width: 600px;
-    margin: 40px auto;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.container-form label {
-    font-weight: bold;
-    color: #333;
-}
-
-.container-form input {
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    width: 100%;
-}
-
-.container-form button {
-    align-self: flex-start;
-    background-color: #1f1288;
-    border: 1px solid black;
-    border-radius: 20px;
-    padding: 8px 18px;
-    cursor: pointer;
-    color: #fff;
-    transition: 0.3s;
-}
-
-.container-form button:hover {
-    background-color: #1b0f77;
-}
-
-/* ============================
    MODAL FUNCIONÁRIO
 ============================ */
 .modal {
@@ -801,55 +674,6 @@ body {
 
 .btn-fechar {
     background: #888;
-}
-
-.checkbox-funcionario {
-    display: none;
-}
-
-body.modo-remover .checkbox-funcionario {
-    display: inline-block;
-}
-.form-funcionario {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    width: 400px;
-    margin: auto;
-    padding: 20px;
-    background: #fff;
-    border-radius: 10px;
-}
-
-.form-funcionario input {
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-}
-
-.form-funcionario button {
-    background: #1f1288;
-    color: #fff;
-    border: none;
-    padding: 10px;
-    border-radius: 6px;
-    cursor: pointer;
-}
-
-.form-funcionario button:hover {
-    background: #1f1288;
-}
-.checkbox-funcionario {
-  display: none;
-  width: 20px;
-  height: 20px;
-  cursor: pointer;
-  margin-right: 10px;
-  accent-color: #ff0000;
-}
-
-.modo-remover .checkbox-funcionario {
-  display: inline-block !important;
 }
 
 .btn-editar:hover { background: #b00000; }
@@ -930,3 +754,5 @@ body.modo-remover .checkbox-funcionario {
 }
 
 
+
+.mensagem-erro { background: #fff0f0; color: #9b1c1c; border: 1px solid #e5b5b5; border-radius: 8px; padding: 10px 14px; margin: 10px 0; }

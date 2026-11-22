@@ -1,26 +1,20 @@
 <?php
-session_start();
-
-if (!isset($_SESSION['usuario_id'])) {
-    header("Location: login.php");
-    exit();
-}
-
-$usuario_id = $_SESSION['usuario_id'];
-$tipo_usuario = $_SESSION['tipo_usuario'] ?? '';
-require 'bd.php';
+require_once __DIR__ . '/includes/auth.php';
+require_login();
+$usuario_id = current_user_id();
+$tipo_usuario = current_user_type();
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Página Inicial Funcionários</title>
+    <title>Página Inicial</title>
     <link rel="stylesheet" href="style/inicial.css">
 </head>
 <body>
     <div class="navbar">
-    <a href="index.php" class="logout-icon">
+    <a href="logout.php" class="logout-icon">
         <img src="../Imagens/icone_sair.png" alt="Sair">
     </a>
 </div>

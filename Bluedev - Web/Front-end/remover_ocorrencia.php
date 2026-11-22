@@ -1,19 +1,23 @@
 <?php
-session_start();
-require 'bd.php';
+require_once __DIR__ . '/includes/auth.php';
+require_login();
 
-if (empty($_POST['ocorrencias'])) {
-    die("ID da ocorrência não informado.");
+if (!is_admin()) {
+    http_response_code(403);
+    exit('Somente administradores podem excluir ocorrências.');
 }
-
-$ids = array_map('intval', $_POST['ocorrencias']);
-
+$ids = $_POST['ocorrencias'] ?? [];
+if (!is_array($ids) || !$ids) {
+    api_flash_error('Selecione pelo menos uma ocorrência para remover.');
+    header('Location: ocorrencias.php');
+    exit();
+}
 try {
-    $placeholders = implode(',', array_fill(0, count($ids), '?'));
-    $stmt = $pdo->prepare("DELETE FROM ocorrencias WHERE id IN ($placeholders)");
-    $stmt->execute($ids);
-    header("Location: ocorrencias.php");
-    exit;
-} catch (PDOException $e) {
-    die("Erro ao remover ocorrências: " . $e->getMessage());
+    foreach (array_unique(array_map('intval', $ids)) as $id) {
+        if ($id > 0) api_request('DELETE', '/api/ocorrencias/' . $id);
+    }
+} catch (Throwable $exception) {
+    api_flash_error(api_user_message($exception));
 }
+header('Location: ocorrencias.php');
+exit();
