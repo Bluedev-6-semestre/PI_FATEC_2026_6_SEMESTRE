@@ -1,14 +1,10 @@
 <?php
-session_start();
-require 'bd.php';
+require_once __DIR__ . '/auth.php';
+$auth = auth_require_admin();
+$usuario_id = $auth['id'];
+$tipo_usuario = $auth['tipo'];
 
-$usuario_id = $_SESSION['usuario_id'] ?? 0;
-if (!$usuario_id) {
-    header('Location: login.php');
-    exit();
-}
-
-$id = $_GET['id'] ?? null;
+$id = isset($_GET['id']) ? (int) $_GET['id'] : null;
 $modo = $id ? 'editar' : 'adicionar';
 
 $dados = [
@@ -21,11 +17,8 @@ $dados = [
 
 if ($id) {
     try {
-        $stmt = $pdo->prepare("SELECT * FROM fornecedores WHERE id = :id AND usuario_id = :usuario_id");
-        $stmt->execute([
-            ':id' => $id,
-            ':usuario_id' => $usuario_id
-        ]);
+        $stmt = $pdo->prepare("SELECT * FROM fornecedores WHERE id = :id");
+        $stmt->execute([':id' => $id]);
         $dados = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$dados) {
@@ -47,15 +40,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($id) {
             $stmt = $pdo->prepare("UPDATE fornecedores 
                                    SET nome = :nome, cnpj = :cnpj, categoria = :categoria, telefone = :telefone, endereco = :endereco
-                                   WHERE id = :id AND usuario_id = :usuario_id");
+                                   WHERE id = :id");
             $stmt->execute([
                 ':nome' => $nome,
                 ':cnpj' => $cnpj,
                 ':categoria' => $categoria,
                 ':telefone' => $telefone,
                 ':endereco' => $endereco,
-                ':id' => $id,
-                ':usuario_id' => $usuario_id
+                ':id' => $id
             ]);
         } else {
             $stmt = $pdo->prepare("INSERT INTO fornecedores (usuario_id, nome, cnpj, categoria, telefone, endereco) 
@@ -85,11 +77,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= $modo === 'editar' ? 'Editar' : 'Adicionar' ?> Fornecedor</title>
     <link rel="stylesheet" href="style/style_base.css">
+    <link rel="stylesheet" href="style/admin.css">
 </head>
 <body>
     <div class="navbar">
         <img src="../Imagens/logo_cliente.jpeg" alt="Logo Cliente" class="logo-cliente">
-        <a href="index.php" class="logout-icon">
+        <a href="logout.php" class="logout-icon">
             <img src="../Imagens/icone_sair.png" alt="Sair">
         </a>
         <a href="fornecedores.php" class="voltar-icon">
@@ -98,15 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 
     <div class="container">
-        <aside class="sidebar">
-            <ul>
-                <li><a href="ocorrencias.php"><img src="../Imagens/ocorrencia_icone.png" alt="Ocorrências"> Ocorrências</a></li>
-                <li><a href="fornecedores.php" class="ativo"><img src="../Imagens/fornecedor_icone.png" alt="Fornecedores"> Fornecedores</a></li>
-                <li><a href="funcionarios.php"><img src="../Imagens/func_icone.png" alt="Funcionários"> Funcionários</a></li>
-                <li><a href="maquinas.php"><img src="../Imagens/maquina_icone.png" alt="Máquinas"> Máquinas</a></li>
-                <li><a href="relatorios.php"><img src="../Imagens/relatorio_icone.png" alt="Relatórios"> Relatórios</a></li>
-            </ul>
-        </aside>
+        <?php $menuAtivo = 'fornecedores'; include 'menu.php'; ?>
 
         <main class="main-content">
             <div class="titulo-pagina">
