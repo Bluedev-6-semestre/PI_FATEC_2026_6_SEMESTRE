@@ -24,6 +24,9 @@ public record CriarOcorrenciaRequestDto(
         @Size(max = 50)
         String status,
 
-        String descricao
+        String descricao,
+
+        @Size(max = 255)
+        String imagem
 
 ) {}

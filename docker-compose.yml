@@ -1,19 +1,18 @@
+
 services:
   mariadb:
     image: mariadb:10.11
     container_name: bluedev-mariadb
     restart: unless-stopped
     environment:
-      MARIADB_DATABASE: bluedev
-      MARIADB_USER: bluedev
-      MARIADB_PASSWORD: bluedev
       MARIADB_ROOT_PASSWORD: bluedev_root
     ports:
       - "3307:3306"
     volumes:
       - bluedev-db-data:/var/lib/mysql
+      - ./docker/mariadb/init:/docker-entrypoint-initdb.d
     healthcheck:
-      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      test: [ "CMD", "healthcheck.sh", "--connect", "--innodb_initialized" ]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -25,9 +24,9 @@ services:
     container_name: bluedev-machine-service
     restart: unless-stopped
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mariadb:3306/bluedev
-      SPRING_DATASOURCE_USERNAME: bluedev
-      SPRING_DATASOURCE_PASSWORD: bluedev
+      DB_URL: jdbc:mysql://mariadb:3306/bluedev_machine
+      DB_USERNAME: machine_user
+      DB_PASSWORD: machine_pass
     depends_on:
       mariadb:
         condition: service_healthy
@@ -38,15 +37,10 @@ services:
     container_name: bluedev-occurrence-service
     restart: unless-stopped
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mariadb:3306/bluedev
-      SPRING_DATASOURCE_USERNAME: bluedev
-      SPRING_DATASOURCE_PASSWORD: bluedev
+      DB_URL: jdbc:mysql://mariadb:3306/bluedev_occurrence
+      DB_USERNAME: occurrence_user
+      DB_PASSWORD: occurrence_pass
       MACHINE_SERVICE_URL: http://machine-service:8081
-      AWS_REGION: ${AWS_REGION:-us-east-1}
-      AWS_S3_BUCKET: ${AWS_S3_BUCKET:-}
-      AWS_S3_PRESIGNED_URL_EXPIRATION: ${AWS_S3_PRESIGNED_URL_EXPIRATION:-15m}
-      AWS_S3_MAX_FILE_SIZE: ${AWS_S3_MAX_FILE_SIZE:-5MB}
-      AWS_S3_MAX_REQUEST_SIZE: ${AWS_S3_MAX_REQUEST_SIZE:-6MB}
     depends_on:
       mariadb:
         condition: service_healthy
@@ -59,9 +53,9 @@ services:
     container_name: bluedev-user-service
     restart: unless-stopped
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mariadb:3306/bluedev
-      SPRING_DATASOURCE_USERNAME: bluedev
-      SPRING_DATASOURCE_PASSWORD: bluedev
+      DB_URL: jdbc:mysql://mariadb:3306/bluedev_user
+      DB_USERNAME: user_user
+      DB_PASSWORD: user_pass
     depends_on:
       mariadb:
         condition: service_healthy

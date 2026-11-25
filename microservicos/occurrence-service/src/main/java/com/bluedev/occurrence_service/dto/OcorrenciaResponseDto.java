@@ -1,3 +1,4 @@
+
 package com.bluedev.occurrence_service.dto;
 
 import java.time.LocalDateTime;
