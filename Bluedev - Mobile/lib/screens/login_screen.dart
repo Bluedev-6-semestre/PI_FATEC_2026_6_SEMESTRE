@@ -17,7 +17,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   String _apiUrl = const String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://10.0.2.2:8000/api',
+    defaultValue: 'http://10.0.2.2:8080',
   );
   final _usuario = TextEditingController();
   final _senha = TextEditingController();
@@ -45,7 +45,7 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  /// "Precisa de ajuda?": orientações e endereço do servidor da API.
+  /// "Precisa de ajuda?": orientações e endereço do API Gateway.
   Future<void> _help() async {
     final url = await showModalBottomSheet<String>(
       context: context,
@@ -196,7 +196,7 @@ class _HelpSheetState extends State<_HelpSheet> {
             style: BD.body.copyWith(color: BD.muted),
           ),
           const SizedBox(height: 18),
-          const FieldLabel('Endereço do servidor (API)'),
+          const FieldLabel('Endereço do servidor (API Gateway)'),
           TextField(
             controller: _url,
             keyboardType: TextInputType.url,

@@ -13,7 +13,7 @@ import 'package:integration_test/integration_test.dart';
 import 'package:bluedev_mobile/api_client.dart';
 import 'package:bluedev_mobile/main.dart';
 
-const apiUrl = 'http://10.0.2.2:8000/api';
+const apiUrl = 'http://10.0.2.2:8080';
 final stamp = DateTime.now().millisecondsSinceEpoch % 100000;
 final occurrenceTitle = '[IT] Vazamento $stamp';
 final funcOccurrenceTitle = '[IT] Correia FUNC $stamp';
