@@ -1,35 +1,31 @@
 <?php
-session_start();
-require 'bd.php';
+require_once __DIR__ . '/includes/auth.php';
+require_login();
 
-$tipo_usuario = $_SESSION['tipo_usuario'] ?? ''; 
-$usuario_id   = $_SESSION['usuario_id'] ?? 0;
-$statusFiltro = $_GET['status'] ?? '';
+$tipo_usuario = current_user_type();
+$statusFiltro = trim($_GET['status'] ?? '');
+$ocorrencias = [];
+$nomesMaquinas = [];
+$erro = null;
 
 try {
-    if ($tipo_usuario === 'ADM') {
-        if (!empty($statusFiltro)) {
-            $stmt = $pdo->prepare("SELECT o.*, m.nome AS nome_maquina FROM ocorrencias o LEFT JOIN maquinas m ON o.maquina_id = m.id WHERE o.status = :status ORDER BY o.id DESC");
-            $stmt->bindValue(':status', $statusFiltro);
-        } else {
-            $stmt = $pdo->prepare("SELECT o.*, m.nome AS nome_maquina FROM ocorrencias o LEFT JOIN maquinas m ON o.maquina_id = m.id ORDER BY o.id DESC");
-        }
-    } else {
-        if (!empty($statusFiltro)) {
-            $stmt = $pdo->prepare("SELECT o.*, m.nome AS nome_maquina FROM ocorrencias o LEFT JOIN maquinas m ON o.maquina_id = m.id WHERE o.usuario_id = :usuario_id AND o.status = :status ORDER BY o.id DESC");
-            $stmt->bindValue(':usuario_id', $usuario_id);
-            $stmt->bindValue(':status', $statusFiltro);
-        } else {
-            $stmt = $pdo->prepare("SELECT o.*, m.nome AS nome_maquina FROM ocorrencias o LEFT JOIN maquinas m ON o.maquina_id = m.id WHERE o.usuario_id = :usuario_id ORDER BY o.id DESC");
-            $stmt->bindValue(':usuario_id', $usuario_id);
-        }
+    $maquinasResumo = api_request('GET', '/api/maquinas');
+    foreach (is_array($maquinasResumo) ? $maquinasResumo : [] as $maquina) {
+        if (!empty($maquina['id'])) $nomesMaquinas[(int) $maquina['id']] = $maquina['nome'] ?? '—';
     }
 
-    $stmt->execute();
-    $ocorrencias = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-} catch (PDOException $e) {
-    die("Erro ao buscar ocorrências: " . $e->getMessage());
+    $resposta = api_request('GET', '/api/ocorrencias');
+    foreach (is_array($resposta) ? $resposta : [] as $ocorrencia) {
+        if ($tipo_usuario !== 'ADM' && (int) ($ocorrencia['usuarioId'] ?? 0) !== current_user_id()) continue;
+        if ($statusFiltro !== '' && !in_array($ocorrencia['status'] ?? '', [$statusFiltro, $statusFiltro === 'Concluído' ? 'Concluída' : $statusFiltro], true)) continue;
+        $ocorrencia['nome_maquina'] = $nomesMaquinas[(int) ($ocorrencia['maquinaId'] ?? 0)] ?? '—';
+        $ocorrencias[] = $ocorrencia;
+    }
+    usort($ocorrencias, static function ($a, $b) {
+        return (int) ($b['id'] ?? 0) <=> (int) ($a['id'] ?? 0);
+    });
+} catch (Throwable $exception) {
+    $erro = api_user_message($exception);
 }
 ?>
 <!DOCTYPE html>
@@ -44,7 +40,7 @@ try {
 
 <div class="navbar">
     <img src="../Imagens/logo_cliente.jpeg" class="logo-cliente">
-    <a href="index.php" class="logout-icon"><img src="../Imagens/icone_sair.png"></a>
+    <a href="logout.php" class="logout-icon"><img src="../Imagens/icone_sair.png"></a>
 </div>
 
 <div class="container">
@@ -52,15 +48,16 @@ try {
         <ul>
             <li><a href="ocorrencias.php"><img src="../Imagens/ocorrencia_icone.png"> Ocorrências</a></li>
             <?php if ($tipo_usuario === 'ADM'): ?>
-                <li><a href="fornecedores.php"><img src="../Imagens/fornecedor_icone.png"> Fornecedores</a></li>
-                <li><a href="funcionarios.php"><img src="../Imagens/func_icone.png"> Funcionários</a></li>
                 <li><a href="maquinas.php"><img src="../Imagens/maquina_icone.png"> Máquinas</a></li>
+                <li><a href="usuarios.php"><img src="../Imagens/perfil.png" alt="Usuários"> Usuários</a></li>
             <?php endif; ?>
             <li><a href="relatorios.php"><img src="../Imagens/relatorio_icone.png"> Relatórios</a></li>
         </ul>
     </aside>
 
     <main class="main-content">
+        <?php if ($erro): ?><p class="mensagem-erro" role="alert"><?= htmlspecialchars($erro) ?></p><?php endif; ?>
+        <?php if ($mensagem = api_take_flash_error()): ?><p class="mensagem-erro" role="alert"><?= htmlspecialchars($mensagem) ?></p><?php endif; ?>
 
         <div class="titulo-pagina">
             <h2>OCORRÊNCIAS</h2>

@@ -1,3 +1,11 @@
+<?php
+require_once __DIR__ . '/includes/auth.php';
+if (!empty($_SESSION['usuario_id'])) {
+    header('Location: ' . (is_admin() ? 'inicial_adm.php' : 'inicial_func.php'));
+    exit();
+}
+$erroLogin = api_take_flash_error();
+?>
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -16,6 +24,9 @@
         <div class="login-panel">
             <div class="login-form">
                 <h2>Login</h2>
+                <?php if ($erroLogin): ?>
+                    <p class="mensagem-erro" role="alert"><?= htmlspecialchars($erroLogin, ENT_QUOTES, 'UTF-8') ?></p>
+                <?php endif; ?>
                 <form action="login.php" method="POST">
                     <div class="input-group">
                         <label for="usuario">

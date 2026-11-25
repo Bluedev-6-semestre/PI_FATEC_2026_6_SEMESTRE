@@ -1,115 +1,82 @@
 <?php
-session_start();
-require 'bd.php';
+require_once __DIR__ . '/includes/auth.php';
+require_login();
 
-$usuario_id = $_SESSION['usuario_id'] ?? 0;
-$tipo_usuario = $_SESSION['tipo_usuario'] ?? '';
-$id = $_GET['id'] ?? null;
+$usuario_id = current_user_id();
+$tipo_usuario = current_user_type();
+$id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT) ?: null;
 $modo = $id ? 'editar' : 'adicionar';
-
-$dados = [
-    'titulo' => '',
-    'tipo' => '',
-    'status' => '',
-    'descricao' => '',
-    'imagem' => '',
-    'maquina_id' => ''
-];
+$dados = ['usuarioId' => $usuario_id, 'maquinaId' => null, 'titulo' => '', 'tipo' => '', 'status' => '', 'descricao' => '', 'imagem' => '', 'dataCriacao' => ''];
+$maquinas = [];
+$erro = null;
 
 try {
-    if ($tipo_usuario === 'ADM') {
-        $stmtMaquinas = $pdo->query("SELECT id, nome FROM maquinas ORDER BY nome");
-    } else {
-        $stmtMaquinas = $pdo->prepare("SELECT id, nome FROM maquinas WHERE usuario_id = :usuario_id ORDER BY nome");
-        $stmtMaquinas->bindValue(':usuario_id', $usuario_id, PDO::PARAM_INT);
-        $stmtMaquinas->execute();
-    }
-    $maquinas = $stmtMaquinas->fetchAll(PDO::FETCH_ASSOC);
-} catch (PDOException $e) {
-    die("Erro ao buscar máquinas: " . $e->getMessage());
-}
+    $resumo = api_request('GET', '/api/maquinas');
 
-if ($id) {
-    try {
-        $stmt = $pdo->prepare("SELECT * FROM ocorrencias WHERE id = :id");
-        $stmt->execute([':id' => $id]);
-        $dados = $stmt->fetch(PDO::FETCH_ASSOC);
-        if (!$dados) die("Ocorrência não encontrada.");
-    } catch (PDOException $e) {
-        die("Erro ao buscar ocorrência: " . $e->getMessage());
+    $maquinas = is_array($resumo) ? $resumo : [];
+
+    if ($id) {
+        $dados = api_request('GET', '/api/ocorrencias/' . $id);
+
+        if ($tipo_usuario !== 'ADM' && (int) ($dados['usuarioId'] ?? 0) !== $usuario_id) {
+            http_response_code(403);
+            exit('Você não tem permissão para editar esta ocorrência.');
+        }
     }
+} catch (Throwable $exception) {
+    http_response_code($exception instanceof ApiException && $exception->getHttpStatus() === 404 ? 404 : 502);
+    exit(htmlspecialchars(api_user_message($exception), ENT_QUOTES, 'UTF-8'));
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-
-    $titulo = $_POST['titulo'] ?? '';
-    $tipo = $_POST['tipo'] ?? '';
-    $status = $_POST['status'] ?? '';
-    $descricao = $_POST['descricao'] ?? '';
-    $maquina_id = !empty($_POST['maquina_id']) ? $_POST['maquina_id'] : null;
-    $imagem = $dados['imagem'];
-
+    $imagem = (string) ($dados['imagem'] ?? '');
     if (isset($_FILES['imagem']) && $_FILES['imagem']['error'] !== UPLOAD_ERR_NO_FILE) {
-        $extensao = pathinfo($_FILES['imagem']['name'], PATHINFO_EXTENSION);
-        $nomeArquivo = uniqid('img_') . '.' . strtolower($extensao);
-
-        $diretorioUploads = __DIR__ . '/uploads/';
-        if (!is_dir($diretorioUploads)) mkdir($diretorioUploads, 0755, true);
-
-        $caminhoDestino = $diretorioUploads . $nomeArquivo;
-
-        if (move_uploaded_file($_FILES['imagem']['tmp_name'], $caminhoDestino)) {
-            $imagem = 'uploads/' . $nomeArquivo;
+        if ($_FILES['imagem']['error'] !== UPLOAD_ERR_OK || $_FILES['imagem']['size'] > 5 * 1024 * 1024) {
+            $erro = 'Não foi possível enviar a imagem. O limite é de 5 MB.';
+        } elseif (@getimagesize($_FILES['imagem']['tmp_name']) === false) {
+            $erro = 'O arquivo enviado não é uma imagem válida.';
         } else {
-            die("Erro ao fazer upload da imagem.");
+            $extensao = strtolower(pathinfo($_FILES['imagem']['name'], PATHINFO_EXTENSION));
+            $permitidas = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+            if (!in_array($extensao, $permitidas, true)) {
+                $erro = 'Formato de imagem não permitido.';
+            } else {
+                $nomeArquivo = bin2hex(random_bytes(12)) . '.' . $extensao;
+                $diretorioUploads = __DIR__ . '/uploads/';
+                if (!is_dir($diretorioUploads)) mkdir($diretorioUploads, 0755, true);
+                if (move_uploaded_file($_FILES['imagem']['tmp_name'], $diretorioUploads . $nomeArquivo)) {
+                    $imagem = 'uploads/' . $nomeArquivo;
+                } else {
+                    $erro = 'Não foi possível salvar a imagem enviada.';
+                }
+            }
         }
     }
 
-    try {
-        if ($id) {
-            $stmt = $pdo->prepare("
-                UPDATE ocorrencias 
-                SET maquina_id = :maquina_id,
-                    titulo = :titulo,
-                    tipo = :tipo,
-                    status = :status,
-                    descricao = :descricao,
-                    imagem = :imagem
-                WHERE id = :id
-            ");
+    $payload = [
+        'usuarioId' => (int) ($dados['usuarioId'] ?? $usuario_id),
+        'maquinaId' => ($_POST['maquina_id'] ?? '') !== '' ? (int) $_POST['maquina_id'] : null,
+        'titulo' => trim($_POST['titulo'] ?? ''),
+        'tipo' => trim($_POST['tipo'] ?? ''),
+        'status' => trim($_POST['status'] ?? ''),
+        'descricao' => trim($_POST['descricao'] ?? ''),
+        'imagem' => $imagem !== '' ? $imagem : null,
+    ];
 
-            $stmt->execute([
-                ':maquina_id' => $maquina_id,
-                ':titulo' => $titulo,
-                ':tipo' => $tipo,
-                ':status' => $status,
-                ':descricao' => $descricao,
-                ':imagem' => $imagem,
-                ':id' => $id
-            ]);
-        } else {
-            $stmt = $pdo->prepare("
-                INSERT INTO ocorrencias 
-                (maquina_id, titulo, tipo, status, descricao, imagem, usuario_id)
-                VALUES (:maquina_id, :titulo, :tipo, :status, :descricao, :imagem, :usuario_id)
-            ");
-
-            $stmt->execute([
-                ':maquina_id' => $maquina_id,
-                ':titulo' => $titulo,
-                ':tipo' => $tipo,
-                ':status' => $status,
-                ':descricao' => $descricao,
-                ':imagem' => $imagem,
-                ':usuario_id' => $usuario_id
-            ]);
+    if ($erro === null) {
+        try {
+            if ($id) api_request('PUT', '/api/ocorrencias/' . $id, $payload);
+            else {
+                $payload['usuarioId'] = $usuario_id;
+                api_request('POST', '/api/ocorrencias', $payload);
+            }
+            header('Location: ocorrencias.php');
+            exit();
+        } catch (Throwable $exception) {
+            $erro = api_user_message($exception);
         }
-
-        header('Location: ocorrencias.php');
-        exit();
-    } catch (PDOException $e) {
-        die("Erro ao salvar ocorrência: " . $e->getMessage());
     }
+    $dados = array_merge($dados, $payload);
 }
 ?>
 
@@ -124,7 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
     <div class="navbar">
         <img src="../Imagens/logo_cliente.jpeg" alt="Logo Cliente" class="logo-cliente">
-        <a href="index.php" class="logout-icon">
+        <a href="logout.php" class="logout-icon">
             <img src="../Imagens/icone_sair.png" alt="Sair">
         </a>
         <a href="ocorrencias.php" class="voltar-icon">
@@ -137,9 +104,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <ul>
             <li><a href="ocorrencias.php"><img src="../Imagens/ocorrencia_icone.png"> Ocorrências</a></li>
             <?php if ($tipo_usuario === 'ADM'): ?>
-                <li><a href="fornecedores.php"><img src="../Imagens/fornecedor_icone.png"> Fornecedores</a></li>
-                <li><a href="funcionarios.php"><img src="../Imagens/func_icone.png"> Funcionários</a></li>
                 <li><a href="maquinas.php"><img src="../Imagens/maquina_icone.png"> Máquinas</a></li>
+                <li><a href="usuarios.php"><img src="../Imagens/perfil.png" alt="Usuários"> Usuários</a></li>
             <?php endif; ?>
             <li><a href="relatorios.php"><img src="../Imagens/relatorio_icone.png"> Relatórios</a></li>
         </ul>
@@ -152,6 +118,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
 
             <form method="POST" enctype="multipart/form-data" class="form-ocorrencia">
+                <?php if ($erro): ?><p class="mensagem-erro" role="alert"><?= htmlspecialchars($erro) ?></p><?php endif; ?>
                 <label for="titulo">Título da ocorrência</label>
                 <input type="text" id="titulo" name="titulo" required value="<?= htmlspecialchars($dados['titulo']) ?>">
 
@@ -174,7 +141,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <select id="maquina_id" name="maquina_id">
                     <option value="">Nenhuma máquina selecionada</option>
                     <?php foreach ($maquinas as $m): ?>
-                        <option value="<?= $m['id'] ?>" <?= $dados['maquina_id'] == $m['id'] ? 'selected' : '' ?>>
+                        <option value="<?= $m['id'] ?>" <?= $dados['maquinaId'] == $m['id'] ? 'selected' : '' ?>>
                             <?= htmlspecialchars($m['nome']) ?>
                         </option>
                     <?php endforeach; ?>
