@@ -41,6 +41,10 @@ services:
       DB_USERNAME: occurrence_user
       DB_PASSWORD: occurrence_pass
       MACHINE_SERVICE_URL: http://machine-service:8081
+      IMAGENS_DIR: /app/uploads/ocorrencias
+    volumes:
+      # Fotos das ocorrências: sem volume elas somem quando o contêiner é recriado.
+      - bluedev-occurrence-uploads:/app/uploads
     depends_on:
       mariadb:
         condition: service_healthy
@@ -80,3 +84,4 @@ services:
 
 volumes:
   bluedev-db-data:
+  bluedev-occurrence-uploads:

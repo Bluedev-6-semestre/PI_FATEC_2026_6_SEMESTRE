@@ -11,21 +11,29 @@ import feign.FeignException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class OcorrenciaService {
 
+    /** Caminho da foto no gateway; o "v" muda a cada envio para os clientes recarregarem. */
+    private static final String CAMINHO_IMAGEM = "/api/ocorrencias/%d/imagem?v=%d";
+
     private final OcorrenciaRepository ocorrenciaRepository;
     private final MaquinaClient maquinaClient;
+    private final ImagemStorageService imagemStorage;
 
     public OcorrenciaService(
             OcorrenciaRepository ocorrenciaRepository,
-            MaquinaClient maquinaClient) {
+            MaquinaClient maquinaClient,
+            ImagemStorageService imagemStorage) {
         this.ocorrenciaRepository = ocorrenciaRepository;
         this.maquinaClient = maquinaClient;
+        this.imagemStorage = imagemStorage;
     }
 
     public List<OcorrenciaResponseDto> listarTodas() {
@@ -84,6 +92,32 @@ public class OcorrenciaService {
     public void excluir(Integer id) {
         Ocorrencia ocorrencia = buscarEntidadePorId(id);
         ocorrenciaRepository.delete(ocorrencia);
+        imagemStorage.remover(id);
+    }
+
+    @Transactional
+    public OcorrenciaResponseDto salvarImagem(Integer id, MultipartFile arquivo) {
+        Ocorrencia ocorrencia = buscarEntidadePorId(id);
+        imagemStorage.salvar(id, arquivo);
+        ocorrencia.setImagem(String.format(CAMINHO_IMAGEM, id, System.currentTimeMillis()));
+        return converterParaResponse(ocorrenciaRepository.save(ocorrencia));
+    }
+
+    public Optional<ImagemStorageService.Imagem> carregarImagem(Integer id) {
+        buscarEntidadePorId(id);
+        return imagemStorage.carregar(id);
+    }
+
+    @Transactional
+    public void removerImagem(Integer id) {
+        Ocorrencia ocorrencia = buscarEntidadePorId(id);
+        imagemStorage.remover(id);
+        // Só limpa o campo se a foto era deste serviço (o site antigo guardava outro caminho).
+        if (ocorrencia.getImagem() != null
+                && ocorrencia.getImagem().startsWith("/api/ocorrencias/")) {
+            ocorrencia.setImagem(null);
+            ocorrenciaRepository.save(ocorrencia);
+        }
     }
 
     private void validarMaquina(Integer maquinaId) {
