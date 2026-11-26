@@ -1,11 +1,14 @@
 // Testa o app inteiro no emulador contra a API real.
 //
-// Pré-requisitos: MySQL e `php -S 127.0.0.1:8000 -t "Bluedev - Web/Front-end"`
-// rodando no computador, e um emulador Android ligado.
+// Pré-requisitos: os microsserviços e o API Gateway (porta 8080) rodando no
+// computador, com os usuários ADM/FUNC e as máquinas de exemplo, e um
+// emulador Android ligado.
 //
 //   flutter test integration_test -d emulator-5554
 //
 // Os registros criados levam a marca [IT] e são removidos no final.
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
@@ -17,6 +20,11 @@ const apiUrl = 'http://10.0.2.2:8080';
 final stamp = DateTime.now().millisecondsSinceEpoch % 100000;
 final occurrenceTitle = '[IT] Vazamento $stamp';
 final funcOccurrenceTitle = '[IT] Correia FUNC $stamp';
+final photoTitle = '[IT] Com foto $stamp';
+
+/// PNG 1x1 válido para o teste de foto (a câmera não é controlável no teste).
+final pngBytes = base64Decode(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==');
 
 /// Só textos exibidos (o `find.text` também acha o que foi digitado em campos).
 Finder label(String text) =>
@@ -265,5 +273,42 @@ void main() {
     await waitFor(tester, find.text('Usuário: FUNC · Funcionário'));
     await tap(tester, find.text('Sair').last);
     await waitFor(tester, find.text('Entrar'));
+  });
+
+  testWidgets('foto enviada pela API aparece no detalhe', (tester) async {
+    final api = ApiClient(apiUrl);
+    late int id;
+    try {
+      await api.login('ADM', '1234');
+      id = await api.saveOcorrencia({
+        'titulo': photoTitle,
+        'tipo': 'Corretiva',
+        'status': 'Pendente',
+        'descricao': 'Teste de foto',
+        'maquina_id': null,
+      });
+      await api.enviarImagem(id, pngBytes);
+    } finally {
+      api.close();
+    }
+
+    await login(tester, 'ADM', '1234');
+    await tap(tester, find.text('Ocorrências').last);
+    await typeInto(tester, 'Buscar por título ou máquina', photoTitle);
+    await tap(tester, label(photoTitle));
+    await waitFor(tester, find.text('Editar'));
+
+    // A foto vem do gateway, em /api/ocorrencias/{id}/imagem.
+    final photo = find.byWidgetPredicate((w) =>
+        w is Image &&
+        w.image is NetworkImage &&
+        (w.image as NetworkImage).url.contains('/api/ocorrencias/$id/imagem'));
+    await waitFor(tester, photo);
+    // Dá tempo de baixar; se falhasse, o detalhe mostraria o espaço vazio.
+    for (var i = 0; i < 20; i++) {
+      await tester.pump(const Duration(milliseconds: 250));
+    }
+    expect(find.text('Foto da ocorrência'), findsNothing);
+    await goBack(tester);
   });
 }

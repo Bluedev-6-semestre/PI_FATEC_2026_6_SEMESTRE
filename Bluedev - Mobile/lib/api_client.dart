@@ -94,6 +94,10 @@ class ApiClient {
         return 'Usuário ou senha inválidos.';
       case 403:
         return 'Você não tem permissão para realizar esta operação.';
+      case 413:
+        return 'A imagem deve ter no máximo 5 MB.';
+      case 415:
+        return 'Envie uma imagem JPEG, PNG ou WebP.';
       case 404:
         return detail ?? 'O registro solicitado não foi encontrado.';
       case 503:
@@ -226,8 +230,9 @@ class ApiClient {
     ]..sort((a, b) => '${a['nome']}'.compareTo('${b['nome']}'));
   }
 
-  /// Cria ou edita. Na edição mantém quem criou e a imagem já salva.
-  Future<void> saveOcorrencia(Map<String, dynamic> values, {int? id}) async {
+  /// Cria ou edita e devolve o id. Na edição mantém quem criou e a imagem
+  /// já salva (a foto vai à parte, por [enviarImagem]).
+  Future<int> saveOcorrencia(Map<String, dynamic> values, {int? id}) async {
     Map<String, dynamic>? current;
     if (id != null) {
       current =
@@ -243,11 +248,47 @@ class ApiClient {
       'descricao': descricao.isEmpty ? null : descricao,
       'imagem': current?['imagem'],
     };
-    await _request(
+    final saved = await _request(
       id == null ? 'POST' : 'PUT',
       id == null ? 'ocorrencias' : 'ocorrencias/$id',
       body: body,
     );
+    return _int(saved is Map<String, dynamic> ? saved['id'] : null) ?? id ?? 0;
+  }
+
+  /// Envia ou troca a foto da ocorrência (multipart, campo "arquivo").
+  /// O serviço confere o tipo real (JPEG, PNG ou WebP) e o limite de 5 MB.
+  Future<void> enviarImagem(int id, List<int> bytes) async {
+    final boundary = 'bluedev-${DateTime.now().microsecondsSinceEpoch}';
+    final body = <int>[
+      ...utf8.encode('--$boundary\r\n'
+          'Content-Disposition: form-data; name="arquivo"; filename="foto.jpg"\r\n'
+          'Content-Type: application/octet-stream\r\n\r\n'),
+      ...bytes,
+      ...utf8.encode('\r\n--$boundary--\r\n'),
+    ];
+    final request = await _http.openUrl('POST', _uri('ocorrencias/$id/imagem'));
+    request.headers.set(HttpHeaders.acceptHeader, 'application/json');
+    request.headers.set(
+        HttpHeaders.contentTypeHeader, 'multipart/form-data; boundary=$boundary');
+    request.contentLength = body.length;
+    request.add(body);
+    final response = await request.close();
+    final text = await response.transform(utf8.decoder).join();
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      dynamic data;
+      try {
+        data = text.isEmpty ? null : jsonDecode(text);
+      } on FormatException {
+        data = null;
+      }
+      throw ApiException(_friendlyMessage(response.statusCode, data),
+          status: response.statusCode);
+    }
+  }
+
+  Future<void> removerImagem(int id) async {
+    await _request('DELETE', 'ocorrencias/$id/imagem');
   }
 
   /// Marca a ocorrência como concluída (ação "Validar" do administrador).
@@ -268,10 +309,19 @@ class ApiClient {
     await _request('DELETE', 'ocorrencias/$id');
   }
 
-  /// O campo `imagem` é só texto: o site guarda a foto no próprio servidor e
-  /// envia o caminho. O app só mostra imagens com endereço completo.
+  /// Endereço da foto. As enviadas pela API ficam em
+  /// "/api/ocorrencias/{id}/imagem?v=…" (servidas pelo gateway). Caminhos
+  /// relativos antigos do site (ex.: "uploads/x.jpg") não são acessíveis
+  /// daqui e são ignorados.
   String? imageUrl(String? path) {
     if (path == null || path.isEmpty) return null;
+    if (path.startsWith('/api/')) {
+      final root = baseUrl
+          .trim()
+          .replaceFirst(RegExp(r'/+$'), '')
+          .replaceFirst(RegExp(r'/api$'), '');
+      return '$root$path';
+    }
     final uri = Uri.tryParse(path);
     return uri != null && uri.hasScheme ? path : null;
   }
